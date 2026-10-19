@@ -11,6 +11,9 @@ export default function Footer() {
         <div className="text-sm text-ink-soft md:text-right space-y-1">
           <p>Esguince de tobillo, fascitis plantar, tendinitis de muñeca,</p>
           <p>epicondilitis lateral y cervicalgia tensional.</p>
+          <p className="pt-3 text-xs">
+            Fotos: Vitaly Gariev, Zulfugar Karimov y yury kirillov en Unsplash.
+          </p>
         </div>
       </div>
     </footer>
