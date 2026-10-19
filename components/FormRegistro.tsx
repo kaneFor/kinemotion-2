@@ -64,8 +64,7 @@ export default function FormRegistro() {
         Crea tu cuenta
       </h1>
       <p className="mt-3 text-ink-soft leading-relaxed max-w-md">
-        Solo pedimos lo necesario para armar tu rutina y avisarte por
-        correo cuándo toca tu próxima sesión.
+        Solo pedimos lo necesario para armar tu rutina de ejercicios.
       </p>
 
       <form onSubmit={onSubmit} className="mt-10 space-y-6">
@@ -94,9 +93,6 @@ export default function FormRegistro() {
             className="w-full border border-line bg-paper-dim/40 rounded-sm px-4 py-3 text-ink outline-none focus:border-teal"
             placeholder="tu@correo.cl"
           />
-          <p className="mt-1.5 text-xs text-ink-soft">
-            Aquí llegarán tus recordatorios de terapia.
-          </p>
         </div>
 
         <div>

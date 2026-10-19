@@ -21,6 +21,9 @@ export default async function Nav() {
             </Link>
           ) : (
             <>
+              <Link href="/#para-quien" className="hover:text-ink transition-colors">
+                Para quién
+              </Link>
               <Link href="/#como-funciona" className="hover:text-ink transition-colors">
                 Cómo funciona
               </Link>
