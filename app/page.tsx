@@ -24,7 +24,7 @@ const pasos = [
       "Ves solo los ejercicios que te corresponden, cada uno con su demostración en movimiento, ritmo, series y una explicación que puedes escuchar.",
   },
   {
-    titulo: "Ejecútalo con el GIF activo",
+    titulo: "Síguelo con el video",
     detalle:
       "Sigues el ciclo completo del movimiento, fase concéntrica y excéntrica, en vez de adivinar a partir de un dibujo fijo.",
   },
@@ -129,7 +129,7 @@ export default function Home() {
               </Link>
             </div>
             <p className="mt-8 text-sm text-ink-soft border-t border-line pt-6 max-w-md">
-              Cinco lesiones documentadas, treinta ejercicios en GIF, acceso
+              Cinco lesiones documentadas, treinta ejercicios en video, acceso
               inmediato desde cualquier navegador.
             </p>
           </Aparecer>
@@ -189,7 +189,7 @@ export default function Home() {
                 <li>Está siempre a mano en tu navegador, en el celular o el computador.</li>
                 <li>
                   Reduce el margen de error en la ejecución, siguiendo la
-                  técnica que muestra el GIF.
+                  técnica que muestra el video.
                 </li>
               </ul>
             </Aparecer>
@@ -332,6 +332,10 @@ export default function Home() {
               Tu lesión y tu prescripción se guardan cifradas, separadas de
               tus datos de acceso, conforme a la Ley N° 19.628 sobre
               Protección de la Vida Privada.
+            </p>
+            <p>
+              Los videos de demostración vienen de YouTube y solo se cargan
+              cuando tocas reproducir.
             </p>
           </Aparecer>
         </section>

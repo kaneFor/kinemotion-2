@@ -22,6 +22,16 @@ Next.js 16 (App Router), TypeScript y Tailwind CSS v4.
   El archivo no se guarda; solo el resultado, cifrado, en `perfiles_clinicos`.
 - `/practica/[id]` — Solo accesible para ejercicios de la rutina del paciente.
 
+### Videos de los ejercicios
+
+Cada ejercicio de `lib/data.ts` tiene un video de YouTube (`youtube`). 27 son
+de **ProET**, la plataforma de ejercicio terapéutico de los Colegios de
+Fisioterapeutas (clips de 10–20 s de un solo ejercicio); el resto, de
+Sanitas, FisioOnline, Clínica Fisalia, el NHS y Recupera't Online. Los
+marcados `aproximado` muestran una variante parecida y conviene
+reemplazarlos cuando haya uno exacto. `components/VideoEjercicio.tsx` carga
+el reproductor (youtube-nocookie) solo al tocar reproducir.
+
 ### Análisis de movimiento (RTMPose / MediaPipe)
 
 La práctica con cámara estima la pose **en el navegador del paciente**

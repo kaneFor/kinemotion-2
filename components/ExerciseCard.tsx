@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Ejercicio } from "@/lib/data";
 import BotonVoz from "@/components/BotonVoz";
+import VideoEjercicio from "@/components/VideoEjercicio";
 import { guias, textoGuia } from "@/lib/guias";
 
 const seedAngles: Record<string, number> = {};
@@ -19,8 +20,10 @@ export default function ExerciseCard({ ejercicio }: { ejercicio: Ejercicio }) {
   const guia = guias[ejercicio.id];
   return (
     <div className="border-t border-line pt-5 group">
-      <div className="aspect-[4/3] bg-paper-dim/60 rounded-sm flex items-center justify-center relative overflow-hidden">
-        {ejercicio.media ? (
+      <div className="aspect-video bg-paper-dim/60 rounded-sm flex items-center justify-center relative overflow-hidden">
+        {ejercicio.youtube ? (
+          <VideoEjercicio video={ejercicio.youtube} nombre={ejercicio.nombre} />
+        ) : ejercicio.media ? (
           <video
             src={ejercicio.media}
             autoPlay
@@ -50,10 +53,26 @@ export default function ExerciseCard({ ejercicio }: { ejercicio: Ejercicio }) {
             </g>
           </svg>
         )}
-        <span className="absolute top-2 right-2 label-tech text-[10px] text-ink-soft bg-paper/80 px-1.5 py-0.5 rounded-sm">
-          gif
-        </span>
+        {!ejercicio.youtube && !ejercicio.media && (
+          <span className="absolute top-2 right-2 label-tech text-[10px] text-ink-soft bg-paper/80 px-1.5 py-0.5 rounded-sm">
+            sin video
+          </span>
+        )}
       </div>
+      {ejercicio.youtube && (
+        <p className="mt-1.5 text-[11px] text-ink-soft leading-snug">
+          {ejercicio.youtube.aproximado && <span className="text-ink">Variante similar · </span>}
+          Video:{" "}
+          <a
+            href={`https://www.youtube.com/watch?v=${ejercicio.youtube.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-ink"
+          >
+            {ejercicio.youtube.canal}
+          </a>
+        </p>
+      )}
       <h3 className="font-display text-sm text-ink mt-3">{ejercicio.nombre}</h3>
       <p className="mt-1 text-xs text-ink-soft label-tech">
         {ejercicio.series} · {ejercicio.ritmo}
