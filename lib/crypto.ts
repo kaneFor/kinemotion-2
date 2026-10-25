@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { leerEnv } from "@/lib/env";
 
 /**
  * Cifrado simétrico AES-256-GCM para los campos sensibles del perfil
@@ -12,7 +13,7 @@ import crypto from "crypto";
  */
 
 function getKey(): Buffer {
-  const hex = process.env.ENCRYPTION_KEY;
+  const hex = leerEnv("ENCRYPTION_KEY");
   if (!hex) {
     throw new Error(
       "Falta la variable de entorno ENCRYPTION_KEY (32 bytes en hex)."
