@@ -16,9 +16,14 @@ export default async function Nav() {
             {usuario ? "Mi rutina" : "Biblioteca de ejercicios"}
           </Link>
           {usuario ? (
-            <Link href="/prescripcion" className="hover:text-ink transition-colors">
-              Mi prescripción
-            </Link>
+            <>
+              <Link href="/progreso" className="hover:text-ink transition-colors">
+                Mi progreso
+              </Link>
+              <Link href="/prescripcion" className="hover:text-ink transition-colors">
+                Mi prescripción
+              </Link>
+            </>
           ) : (
             <>
               <Link href="/#para-quien" className="hover:text-ink transition-colors">

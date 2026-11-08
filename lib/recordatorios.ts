@@ -4,8 +4,9 @@ import { leerEnv } from "@/lib/env";
 /**
  * Reglas de los recordatorios, sin acceso a la base de datos.
  *  - "personalizado": en los días de la semana que eligió el paciente
- *  - "inactividad": cada día que no abrió su rutina
- * En ambos casos se omite si ese día ya entró a ejercitarse.
+ *  - "inactividad": todos los días
+ * En ambos casos solo se envía si ese día no completó su rutina; eso lo
+ * revisa la tarea diaria con el historial.
  */
 
 export const MODOS_RECORDATORIO = ["apagado", "personalizado", "inactividad"] as const;
@@ -40,13 +41,12 @@ const diaDeLaSemana = (fecha: string) => new Date(`${fecha}T12:00:00Z`).getUTCDa
 export function tocaRecordatorio(
   usuario: {
     recordatorios?: Recordatorios;
-    ultimoDiaActivo?: string;
     ultimoRecordatorio?: string;
   },
   hoy: string
 ): boolean {
-  const { recordatorios, ultimoDiaActivo, ultimoRecordatorio } = usuario;
-  if (!recordatorios || ultimoDiaActivo === hoy || ultimoRecordatorio === hoy) {
+  const { recordatorios, ultimoRecordatorio } = usuario;
+  if (!recordatorios || ultimoRecordatorio === hoy) {
     return false;
   }
   if (recordatorios.modo === "inactividad") return true;

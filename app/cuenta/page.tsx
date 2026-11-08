@@ -38,6 +38,10 @@ export default async function Cuenta() {
             <Link href="/biblioteca" className="text-teal-deep underline">
               Ir a mi rutina
             </Link>
+            {" · "}
+            <Link href="/progreso" className="text-teal-deep underline">
+              Mi progreso
+            </Link>
           </p>
 
           <div className="mt-10 border-t border-line pt-6">

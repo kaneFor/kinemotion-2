@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Ejercicio } from "@/lib/data";
 import BotonVoz from "@/components/BotonVoz";
 import VideoEjercicio from "@/components/VideoEjercicio";
+import { MarcaHecho } from "@/components/AccionesSesion";
 import { guias, textoGuia } from "@/lib/guias";
 
 const seedAngles: Record<string, number> = {};
@@ -15,7 +16,15 @@ function anglePara(id: string) {
   return seedAngles[id];
 }
 
-export default function ExerciseCard({ ejercicio }: { ejercicio: Ejercicio }) {
+export default function ExerciseCard({
+  ejercicio,
+  hechoHoy = false,
+  desdeSesion = false,
+}: {
+  ejercicio: Ejercicio;
+  hechoHoy?: boolean;
+  desdeSesion?: boolean;
+}) {
   const angle = anglePara(ejercicio.id);
   const guia = guias[ejercicio.id];
   return (
@@ -90,12 +99,13 @@ export default function ExerciseCard({ ejercicio }: { ejercicio: Ejercicio }) {
       )}
       {ejercicio.angleTarget && (
         <Link
-          href={`/practica/${ejercicio.id}`}
+          href={`/practica/${ejercicio.id}${desdeSesion ? "?desde=sesion" : ""}`}
           className="mt-2 inline-block text-xs font-medium text-teal-deep border border-teal-deep/40 rounded-sm px-2 py-1 hover:bg-teal-deep hover:text-paper transition-colors"
         >
           Practicar con cámara (beta)
         </Link>
       )}
+      {hechoHoy && <MarcaHecho ejercicioId={ejercicio.id} />}
 
       <style>{`
         @keyframes card-swing {

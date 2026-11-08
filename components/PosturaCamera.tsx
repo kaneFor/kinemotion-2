@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { AngleTarget } from "@/lib/data";
 import { anguloDeArticulacion, corregirAspecto, SelectorLado, VIS_MIN } from "@/lib/pose";
 import { FiltroPose } from "@/lib/filtro";
@@ -46,10 +47,13 @@ const MARGEN_CIERRE_MS = 1200;
 export default function PosturaCamera({
   target,
   ejercicioId,
+  desdeSesion = false,
 }: {
   target: AngleTarget;
   ejercicioId: string;
+  desdeSesion?: boolean;
 }) {
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [estado, setEstado] = useState<Estado>("cargando");
@@ -207,6 +211,53 @@ export default function PosturaCamera({
     } finally {
       setResumiendo(false);
     }
+  }
+
+  const [guardando, setGuardando] = useState(false);
+  const [avisoSerie, setAvisoSerie] = useState<string | null>(null);
+
+  async function registrar(evento: object): Promise<boolean> {
+    const res = await fetch("/api/progreso", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ejercicioId, ...evento }),
+    }).catch(() => null);
+    return Boolean(res?.ok);
+  }
+
+  /** Guarda en el historial la serie en curso, si tiene repeticiones. */
+  async function guardarSerie(): Promise<boolean> {
+    const n = repsRef.current;
+    if (n === 0) return true;
+    const ok = await registrar({
+      accion: "serie",
+      reps: n,
+      ...(supervisionRef.current ? { correctas: validas, revisadas: veredictos.length } : {}),
+    });
+    setAvisoSerie(
+      ok
+        ? `Serie guardada: ${n} ${n === 1 ? "repetición" : "repeticiones"}.`
+        : "No se pudo guardar la serie. Revisa tu conexión."
+    );
+    return ok;
+  }
+
+  async function guardarYEmpezarOtra() {
+    setGuardando(true);
+    if (await guardarSerie()) nuevaSerie();
+    setGuardando(false);
+  }
+
+  async function terminarEjercicio() {
+    setGuardando(true);
+    const ok = (await guardarSerie()) && (await registrar({ accion: "hecho" }));
+    setGuardando(false);
+    if (!ok) {
+      setAvisoSerie("No se pudo guardar tu avance. Revisa tu conexión.");
+      return;
+    }
+    router.push(desdeSesion ? "/sesion" : "/biblioteca");
+    router.refresh();
   }
 
   function nuevaSerie() {
@@ -578,6 +629,30 @@ export default function PosturaCamera({
         </div>
       </div>
 
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={guardarYEmpezarOtra}
+          disabled={guardando || reps === 0}
+          className="text-xs font-medium text-ink border border-line rounded-sm px-3 py-2 hover:border-ink transition-colors disabled:opacity-50"
+        >
+          Guardar serie y empezar otra
+        </button>
+        <button
+          type="button"
+          onClick={terminarEjercicio}
+          disabled={guardando}
+          className="text-sm font-medium bg-teal text-paper rounded-sm px-4 py-2 hover:bg-teal-deep transition-colors disabled:opacity-60"
+        >
+          {guardando ? "Guardando…" : "Terminé este ejercicio"}
+        </button>
+        {avisoSerie && (
+          <p role="status" className="w-full text-xs text-ink-soft">
+            {avisoSerie}
+          </p>
+        )}
+      </div>
+
       <section className="mt-6 border-t border-line pt-4" aria-label="Supervisión con IA">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -657,8 +732,9 @@ export default function PosturaCamera({
               </button>
               <button
                 type="button"
-                onClick={nuevaSerie}
-                className="text-xs font-medium text-ink-soft border border-line rounded-sm px-3 py-2 hover:border-ink transition-colors"
+                onClick={guardarYEmpezarOtra}
+                disabled={guardando}
+                className="text-xs font-medium text-ink-soft border border-line rounded-sm px-3 py-2 hover:border-ink transition-colors disabled:opacity-50"
               >
                 Nueva serie
               </button>

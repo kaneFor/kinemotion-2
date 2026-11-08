@@ -16,11 +16,28 @@ Next.js 16 (App Router), TypeScript y Tailwind CSS v4.
   ejercicios permitidos al paciente.
 - `/prescripcion` — Subida de la prescripción médica (PDF digital o .txt).
   Se detecta la lesión y los ejercicios indicados (`lib/prescripcion.ts`):
-  - si nombra ejercicios → el paciente solo ve esos;
-  - si solo nombra la lesión → ve los ejercicios de esa lesión;
-  - si no sube prescripción → ve los de la lesión elegida al registrarse.
+  - puede detectar varias lesiones, y cada una se resuelve por separado;
+  - si nombra ejercicios de una lesión → el paciente solo ve esos;
+  - si solo nombra la lesión → ve todos los ejercicios de esa lesión;
+  - si no sube prescripción → ve los de sus lesiones activas de "Mi cuenta".
   El archivo no se guarda; solo el resultado, cifrado, en `perfiles_clinicos`.
 - `/practica/[id]` — Solo accesible para ejercicios de la rutina del paciente.
+- `/cuenta` — "Mi cuenta": lesiones (principal, activas y terminadas),
+  confirmación del correo y recordatorios.
+- `/sesion` — Recorrido guiado por la rutina de hoy: un ejercicio a la vez,
+  "Terminé este ejercicio" pasa al siguiente y "Saltar" lo deja pendiente.
+  Pregunta el dolor (0 a 10, opcional) al empezar y al terminar.
+- `/progreso` — "Mi progreso": días seguidos, calendario del mes, gráfico del
+  dolor y conteo por ejercicio de los últimos 30 días.
+
+### Historial de progreso
+
+Colección `historial_progreso` (`lib/historial.ts`): un documento por paciente
+y día (hora de Chile). Los ejercicios hechos, saltados, las series con cámara
+y el dolor van **cifrados**, porque revelan la lesión; solo `usuarioId` y
+`fecha` quedan legibles para buscar. Las reglas están en `lib/progreso.ts`,
+incluido el aviso de dolor (≥ 7, o un alza de 3 o más durante la rutina),
+cuyos umbrales son provisorios y debe validar el kinesiólogo.
 
 ### Videos de los ejercicios
 
@@ -189,7 +206,7 @@ cifrado en reposo integrado, si prefieres no gestionarlo tú mismo.
 
 - Lectura de prescripciones escaneadas o en foto (OCR); hoy solo PDF con texto.
 - Revisión de los sinónimos de `lib/prescripcion.ts` por el kinesiólogo.
-- Colecciones `rutinas` e `historial_progreso` (para el seguimiento de adherencia).
+- Informe de progreso para el kinesiólogo (enlace o PDF que comparte el paciente).
 
 ### Correos y recordatorios
 
@@ -208,8 +225,9 @@ Sin Gmail configurado, en desarrollo los correos se imprimen en la terminal.
 - Cada paciente elige en "Mi cuenta" el modo: días personalizados o cada día
   sin entrar a su rutina (`lib/recordatorios.ts`). Parten apagados.
 - Vercel Cron llama una vez al día a `/api/recordatorios/enviar` (`vercel.json`,
-  22:00 UTC). No se recuerda a quien ya entró ese día ni a quien terminó todas
-  sus lesiones.
+  22:00 UTC). Solo se escribe a quien no completó la rutina de hoy: un mensaje
+  si no hizo ningún ejercicio y otro con los que le faltan si la dejó a medias.
+  No se recuerda a quien terminó todas sus lesiones.
 - Los correos nunca mencionan la lesión ni otros datos clínicos.
 
 ## Despliegue

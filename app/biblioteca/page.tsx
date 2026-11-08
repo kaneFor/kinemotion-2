@@ -4,9 +4,11 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import BibliotecaFiltro from "@/components/BibliotecaFiltro";
 import FormLesion from "@/components/FormLesion";
-import RegistrarActividad from "@/components/RegistrarActividad";
 import { obtenerUsuario } from "@/lib/sesion";
 import { obtenerAcceso } from "@/lib/acceso";
+import { leerDia } from "@/lib/historial";
+import { estadoRutina } from "@/lib/progreso";
+import { hoyEnChile } from "@/lib/recordatorios";
 import { lesionesActivas, nombreLesion } from "@/lib/rutina";
 
 export default async function Biblioteca() {
@@ -15,11 +17,15 @@ export default async function Biblioteca() {
 
   const acceso = await obtenerAcceso(usuario.id);
   const activas = lesionesActivas(acceso.lesionesPaciente);
+  const hoy = estadoRutina(
+    acceso.ejercicios.map((e) => e.id),
+    await leerDia(usuario.id, hoyEnChile())
+  );
+  const total = acceso.ejercicios.length;
 
   return (
     <>
       <Nav />
-      <RegistrarActividad />
       <main className="flex-1">
         <section className="max-w-6xl mx-auto px-6 md:px-10 pt-14 pb-8">
           <h1 className="font-display text-3xl md:text-4xl text-ink max-w-lg">
@@ -86,8 +92,33 @@ export default async function Biblioteca() {
           </div>
         </section>
 
+        {total > 0 && (
+          <section className="max-w-6xl mx-auto px-6 md:px-10 pb-4">
+            <div className="max-w-xl border border-line rounded-sm p-5">
+              <p className="label-tech text-xs text-ink-soft">Rutina de hoy</p>
+              <p className="mt-1 font-display text-lg text-ink">
+                {hoy.completa ? "✓ Completa" : `${hoy.hechos.length} de ${total} ejercicios hechos`}
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-4">
+                {!hoy.completa && (
+                  <Link
+                    href="/sesion"
+                    className="bg-teal text-paper px-6 py-3 rounded-sm font-medium hover:bg-teal-deep transition-colors"
+                  >
+                    {hoy.hechos.length === 0 ? "Empezar rutina de hoy" : "Continuar rutina"}
+                  </Link>
+                )}
+                <Link href="/progreso" className="text-sm text-teal-deep underline">
+                  Ver mi progreso
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="max-w-6xl mx-auto px-6 md:px-10 py-6">
           <BibliotecaFiltro
+            hechosHoy={hoy.hechos}
             ejercicios={acceso.ejercicios}
             principal={
               acceso.origen === "lesion" ? activas.find((l) => l.principal)?.slug : undefined

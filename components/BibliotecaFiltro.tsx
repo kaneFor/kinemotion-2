@@ -8,9 +8,11 @@ import { lesiones, type Ejercicio } from "@/lib/data";
 export default function BibliotecaFiltro({
   ejercicios,
   principal,
+  hechosHoy = [],
 }: {
   ejercicios: Ejercicio[];
   principal?: string;
+  hechosHoy?: string[];
 }) {
   const disponibles = lesiones.filter((l) =>
     ejercicios.some((e) => e.lesionSlug === l.slug)
@@ -63,7 +65,7 @@ export default function BibliotecaFiltro({
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-10">
         {visibles.map((e) => (
-          <ExerciseCard key={e.id} ejercicio={e} />
+          <ExerciseCard key={e.id} ejercicio={e} hechoHoy={hechosHoy.includes(e.id)} />
         ))}
       </div>
     </>

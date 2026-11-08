@@ -84,6 +84,7 @@ const beneficios = [
     items: [
       "Rutina clara, con series, ritmo y explicación por voz.",
       "Conteo de repeticiones y avisos de postura en tiempo real.",
+      "Su avance y su dolor registrados día a día.",
       "Sin instalar aplicaciones: funciona en el navegador.",
       "Sus datos clínicos protegidos y cifrados.",
     ],
@@ -95,7 +96,7 @@ const beneficios = [
       "Menos errores de técnica entre una sesión y otra.",
       "Una herramienta de apoyo que no reemplaza su evaluación.",
     ],
-    pronto: "Próximamente: historial de progreso del paciente.",
+    pronto: "Próximamente: informe de progreso del paciente para el kinesiólogo.",
   },
 ];
 

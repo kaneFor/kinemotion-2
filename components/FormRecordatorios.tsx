@@ -9,12 +9,12 @@ const OPCIONES: { modo: ModoRecordatorio; titulo: string; detalle: string }[] = 
   {
     modo: "personalizado",
     titulo: "Personalizado",
-    detalle: "Te escribimos los días que elijas, si ese día aún no entras a tu rutina.",
+    detalle: "Te escribimos los días que elijas, si ese día no completas tu rutina.",
   },
   {
     modo: "inactividad",
-    titulo: "Cada día sin ejercitarme",
-    detalle: "Te escribimos cada día que no entres a tu rutina.",
+    titulo: "Cada día sin completar mi rutina",
+    detalle: "Te escribimos cada día que no completes tu rutina.",
   },
 ];
 
