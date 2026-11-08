@@ -18,7 +18,10 @@ export default function FormLesion() {
       const res = await fetch("/api/lesion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lesion: new FormData(e.currentTarget).get("lesion") }),
+        body: JSON.stringify({
+          accion: "agregar",
+          lesion: new FormData(e.currentTarget).get("lesion"),
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -39,7 +42,7 @@ export default function FormLesion() {
   return (
     <form onSubmit={onSubmit} className="mt-4 space-y-3 max-w-md">
       <label htmlFor="lesion" className="block text-sm text-ink">
-        ¿Qué lesión estás tratando?
+        ¿Cuál es tu lesión principal?
       </label>
       <select
         id="lesion"

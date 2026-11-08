@@ -5,11 +5,17 @@ import ExerciseCard from "@/components/ExerciseCard";
 import { lesiones, type Ejercicio } from "@/lib/data";
 
 /** Pestañas por lesión, solo con los ejercicios a los que el paciente tiene acceso. */
-export default function BibliotecaFiltro({ ejercicios }: { ejercicios: Ejercicio[] }) {
+export default function BibliotecaFiltro({
+  ejercicios,
+  principal,
+}: {
+  ejercicios: Ejercicio[];
+  principal?: string;
+}) {
   const disponibles = lesiones.filter((l) =>
     ejercicios.some((e) => e.lesionSlug === l.slug)
   );
-  const [activa, setActiva] = useState(disponibles[0]?.slug);
+  const [activa, setActiva] = useState(principal ?? disponibles[0]?.slug);
   const lesion = disponibles.find((l) => l.slug === activa) ?? disponibles[0];
   const visibles = ejercicios.filter((e) => e.lesionSlug === lesion?.slug);
 

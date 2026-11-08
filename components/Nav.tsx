@@ -38,6 +38,9 @@ export default async function Nav() {
             <span className="hidden sm:inline text-sm text-ink-soft">
               Hola, {usuario.nombre.split(" ")[0]}
             </span>
+            <Link href="/cuenta" className="text-sm text-ink-soft hover:text-ink transition-colors">
+              Mi cuenta
+            </Link>
             <BotonCerrarSesion />
           </div>
         ) : (

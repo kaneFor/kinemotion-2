@@ -115,7 +115,7 @@ export default function FormRegistro() {
 
         <div>
           <label htmlFor="lesion" className="block text-sm text-ink mb-2">
-            ¿Qué lesión estás tratando?
+            ¿Cuál es tu lesión principal?
           </label>
           <select
             id="lesion"
@@ -133,6 +133,9 @@ export default function FormRegistro() {
               </option>
             ))}
           </select>
+          <p className="mt-1.5 text-xs text-ink-soft">
+            Después podrás agregar otras o cambiarla desde Mi cuenta.
+          </p>
         </div>
 
         <div className="border-t border-line pt-6">

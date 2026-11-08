@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/mongodb";
-import { cifrar } from "@/lib/crypto";
+import { cifrarLesiones } from "@/lib/acceso";
+import { correoPuedeRecibir } from "@/lib/correo";
 import { lesiones } from "@/lib/data";
+import { lesionInicial } from "@/lib/rutina";
 import { crearSesion } from "@/lib/sesion";
+import { enviarConfirmacion } from "@/lib/verificacion";
 import { pistaDeError } from "@/lib/errores";
 
 /**
  * Registro de usuario:
- *  - valida el formulario
+ *  - valida el formulario y que el dominio del correo pueda recibir mensajes
  *  - hashea la contraseña (bcrypt, nunca texto plano)
  *  - cifra el perfil clínico (AES-256-GCM) antes de guardarlo
  *  - separa credenciales (colección `usuarios`) de datos clínicos
  *    (colección `perfiles_clinicos`), como describe el modelo de datos
  *    conceptual del proyecto
  *  - deja la cuenta con la sesión iniciada
+ *  - envía el enlace para confirmar el correo
  */
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -44,11 +48,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const correo = String(body.correo).trim().toLowerCase();
+  if (!(await correoPuedeRecibir(correo))) {
+    return NextResponse.json(
+      { error: "Ese correo no parece válido. Revisa que esté bien escrito." },
+      { status: 400 }
+    );
+  }
+
   try {
     const db = await getDb();
     const usuarios = db.collection("usuarios");
 
-    const correo = String(body.correo).trim().toLowerCase();
     const existente = await usuarios.findOne({ correo });
     if (existente) {
       return NextResponse.json(
@@ -62,7 +73,7 @@ export async function POST(req: NextRequest) {
     // El tipo de lesión es un dato clínico sensible: se cifra ANTES de
     // guardar cualquier cosa, así un fallo de cifrado no deja un usuario
     // huérfano, y queda en una colección separada de las credenciales.
-    const lesionCifrada = cifrar(String(body.lesion));
+    const lesionesCifradas = cifrarLesiones([lesionInicial(String(body.lesion))]);
 
     const usuario = await usuarios.insertOne({
       nombre: body.nombre,
@@ -74,7 +85,7 @@ export async function POST(req: NextRequest) {
     try {
       await db.collection("perfiles_clinicos").insertOne({
         usuarioId: usuario.insertedId,
-        lesion: lesionCifrada,
+        lesiones: lesionesCifradas,
         consentimiento: {
           aceptado: true,
           fecha: new Date(),
@@ -95,6 +106,14 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.error("Cuenta creada, pero falló la sesión:", err);
       sesion = false;
+    }
+
+    // Tampoco se bloquea el registro si falla el correo: se puede reenviar
+    // desde "Mi cuenta".
+    try {
+      await enviarConfirmacion({ _id: usuario.insertedId, nombre: body.nombre, correo });
+    } catch (err) {
+      console.error("Cuenta creada, pero falló el correo de confirmación:", err);
     }
 
     return NextResponse.json({ ok: true, sesion }, { status: 201 });

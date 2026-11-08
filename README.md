@@ -117,9 +117,10 @@ npm run start
 - `lib/crypto.ts` — cifra/descifra campos sensibles con AES-256-GCM.
 - Colección `usuarios`: nombre, correo, `passwordHash` (bcrypt, nunca la
   contraseña en texto plano).
-- Colección `perfiles_clinicos`: el tipo de lesión va **cifrado** (AES-256-GCM)
-  y separado de las credenciales, tal como plantea el modelo de datos del
-  proyecto.
+- Colección `perfiles_clinicos`: la lista de lesiones va **cifrada**
+  (AES-256-GCM) y separada de las credenciales, tal como plantea el modelo de
+  datos del proyecto. Las cuentas anteriores guardan una sola lesión en el
+  campo `lesion`, que se lee como la principal.
 
 ### Paso a paso para conectarlo a tu propio MongoDB
 
@@ -162,7 +163,7 @@ npm run dev
 ```
 Ve a `http://localhost:3000/registro`, completa el formulario y créalo.
 Deberías ver dos documentos nuevos en Atlas: uno en `usuarios` (con
-`passwordHash`) y otro en `perfiles_clinicos` (con `lesion` cifrado como
+`passwordHash`) y otro en `perfiles_clinicos` (con `lesiones` cifrado como
 `{ iv, tag, data }`).
 
 **4. Configura las mismas variables en Vercel al desplegar**
@@ -178,7 +179,7 @@ Para respaldar los datos ya cifrados:
 mongodump --uri="mongodb+srv://usuario:password@cluster0.xxxxx.mongodb.net" --out=./backup
 tar -czf - backup | openssl enc -aes-256-cbc -pbkdf2 -out backup.tar.gz.enc
 ```
-El campo `lesion` ya viaja cifrado dentro del dump; el paso de `openssl`
+El campo `lesiones` ya viaja cifrado dentro del dump; el paso de `openssl`
 cifra además el respaldo completo (incluye `passwordHash` y metadatos) antes
 de subirlo a almacenamiento externo (S3, Google Cloud Storage, etc.). MongoDB
 Atlas (planes de pago) también ofrece backups automáticos programados con
@@ -189,8 +190,27 @@ cifrado en reposo integrado, si prefieres no gestionarlo tú mismo.
 - Lectura de prescripciones escaneadas o en foto (OCR); hoy solo PDF con texto.
 - Revisión de los sinónimos de `lib/prescripcion.ts` por el kinesiólogo.
 - Colecciones `rutinas` e `historial_progreso` (para el seguimiento de adherencia).
-- Notificaciones por correo (SendGrid/Nodemailer) usando `Historial Progreso`
-  para calcular cuándo recordar la siguiente sesión.
+
+### Correos y recordatorios
+
+Los correos salen por Gmail con Nodemailer (`lib/correo.ts`), sin dominio propio.
+
+1. Usa una cuenta de Gmail dedicada y activa la verificación en dos pasos.
+2. Crea una contraseña de aplicación en https://myaccount.google.com/apppasswords
+3. Agrega a `.env.local` y a Vercel: `GMAIL_USUARIO`, `GMAIL_CLAVE_APP` y
+   `CRON_SECRET` (genérala igual que `ENCRYPTION_KEY`).
+
+Sin Gmail configurado, en desarrollo los correos se imprimen en la terminal.
+
+- Al registrarse se revisa que el dominio pueda recibir correo y se envía un
+  enlace de confirmación (`lib/verificacion.ts`). Quien no confirma puede usar
+  la app, pero no activar recordatorios.
+- Cada paciente elige en "Mi cuenta" el modo: días personalizados o cada día
+  sin entrar a su rutina (`lib/recordatorios.ts`). Parten apagados.
+- Vercel Cron llama una vez al día a `/api/recordatorios/enviar` (`vercel.json`,
+  22:00 UTC). No se recuerda a quien ya entró ese día ni a quien terminó todas
+  sus lesiones.
+- Los correos nunca mencionan la lesión ni otros datos clínicos.
 
 ## Despliegue
 

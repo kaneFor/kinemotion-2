@@ -19,6 +19,7 @@ export type UsuarioSesion = {
   id: string;
   nombre: string;
   correo: string;
+  correoVerificado: boolean;
 };
 
 const hashToken = (token: string) =>
@@ -68,6 +69,7 @@ export async function obtenerUsuario(): Promise<UsuarioSesion | null> {
       id: usuario._id.toString(),
       nombre: usuario.nombre,
       correo: usuario.correo,
+      correoVerificado: Boolean(usuario.correoVerificadoEn),
     };
   } catch (err) {
     // Sin base de datos no hay sesión, pero las páginas públicas siguen

@@ -118,7 +118,3 @@ export const ejercicios: Ejercicio[] = [
   { id: "cv-05", lesionSlug: "cervicalgia", nombre: "Retracción escapular", series: "3 x 12", ritmo: "Controlado", foco: "Postura de hombros", youtube: { id: "KOn0vhH3v5s", canal: "Proet Ejercicio Terapéutico", titulo: "807.Retracción escapular" } },
   { id: "cv-06", lesionSlug: "cervicalgia", nombre: "Estiramiento de trapecio superior", series: "3 x 30s por lado", ritmo: "Estático", foco: "Liberación tensional", youtube: { id: "xuHvrFvrKFQ", canal: "Proet Ejercicio Terapéutico", titulo: "289. Estiramiento para trapecio superior" } },
 ];
-
-export function ejerciciosPorLesion(slug: string) {
-  return ejercicios.filter((e) => e.lesionSlug === slug);
-}

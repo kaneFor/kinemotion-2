@@ -7,8 +7,9 @@ import { ejercicios, lesiones } from "@/lib/data";
  *  1. ejercicios concretos de la biblioteca (por nombre o sinónimos), y
  *  2. la lesión diagnosticada (por nombre, sinónimos o código CIE-10).
  *
- * Si la prescripción nombra ejercicios, el paciente solo accede a esos.
- * Si solo nombra la lesión, accede a los ejercicios de esa lesión.
+ * Puede detectar varias lesiones, y cada una se resuelve por separado: si la
+ * prescripción nombra ejercicios de esa lesión, el paciente solo accede a
+ * esos; si solo nombra la lesión, accede a todos sus ejercicios.
  *
  * IMPORTANTE: los sinónimos de abajo son PROVISORIOS y deben ser revisados
  * por el kinesiólogo revisor, igual que las guías de `lib/guias.ts`.

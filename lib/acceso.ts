@@ -1,12 +1,20 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
-import { descifrar, type CampoCifrado } from "@/lib/crypto";
-import { ejercicios, ejerciciosPorLesion, lesiones, type Ejercicio } from "@/lib/data";
+import { cifrar, descifrar, type CampoCifrado } from "@/lib/crypto";
+import { lesiones, type Ejercicio } from "@/lib/data";
+import {
+  ejerciciosDeLesiones,
+  ejerciciosDePrescripcion,
+  lesionInicial,
+  type LesionPaciente,
+} from "@/lib/rutina";
 
 /**
  * Qué ejercicios puede ver cada paciente:
- *  - si subió una prescripción médica → solo lo que indica la prescripción
- *  - si no → los ejercicios de la lesión que eligió al crear su cuenta
+ *  - si subió una prescripción médica → solo lo que indica la prescripción,
+ *    para todas las lesiones que nombre
+ *  - si no → los ejercicios de las lesiones activas de su cuenta, que él
+ *    mismo puede agregar, terminar o reactivar
  */
 
 export type PrescripcionGuardada = {
@@ -18,7 +26,7 @@ export type PrescripcionGuardada = {
 
 export type Acceso = {
   origen: "prescripcion" | "lesion";
-  lesionRegistro: string | null;
+  lesionesPaciente: LesionPaciente[];
   prescripcion: PrescripcionGuardada | null;
   ejercicios: Ejercicio[];
 };
@@ -41,32 +49,57 @@ function leerCifrado(campo: unknown): string | null {
   }
 }
 
+const esLesionConocida = (slug: string | null) =>
+  lesiones.some((l) => l.slug === slug);
+
+/** Las cuentas anteriores guardan una sola lesión en el campo `lesion`. */
+function leerLesiones(perfil: Record<string, unknown> | null): LesionPaciente[] {
+  const guardadas = leerCifrado(perfil?.lesiones);
+  if (guardadas) {
+    return (JSON.parse(guardadas) as LesionPaciente[]).filter((l) =>
+      esLesionConocida(l.slug)
+    );
+  }
+  const anterior = leerCifrado(perfil?.lesion);
+  if (!anterior || !esLesionConocida(anterior)) return [];
+  const creadoEn = perfil?.creadoEn;
+  return [
+    lesionInicial(
+      anterior,
+      creadoEn instanceof Date ? creadoEn.toISOString() : undefined
+    ),
+  ];
+}
+
+export function cifrarLesiones(lista: LesionPaciente[]): CampoCifrado {
+  return cifrar(JSON.stringify(lista));
+}
+
 export async function obtenerAcceso(usuarioId: string): Promise<Acceso> {
   const db = await getDb();
   const perfil = await db
     .collection("perfiles_clinicos")
     .findOne({ usuarioId: new ObjectId(usuarioId) });
 
-  const lesionCruda = leerCifrado(perfil?.lesion);
-  const lesionRegistro =
-    lesionCruda && lesiones.some((l) => l.slug === lesionCruda) ? lesionCruda : null;
+  const lesionesPaciente = leerLesiones(perfil);
   const prescripcionCruda = leerCifrado(perfil?.prescripcion);
   const prescripcion: PrescripcionGuardada | null = prescripcionCruda
     ? JSON.parse(prescripcionCruda)
     : null;
 
   if (prescripcion) {
-    const permitidos =
-      prescripcion.ejercicios.length > 0
-        ? ejercicios.filter((e) => prescripcion.ejercicios.includes(e.id))
-        : ejercicios.filter((e) => prescripcion.lesiones.includes(e.lesionSlug));
-    return { origen: "prescripcion", lesionRegistro, prescripcion, ejercicios: permitidos };
+    return {
+      origen: "prescripcion",
+      lesionesPaciente,
+      prescripcion,
+      ejercicios: ejerciciosDePrescripcion(prescripcion),
+    };
   }
 
   return {
     origen: "lesion",
-    lesionRegistro,
+    lesionesPaciente,
     prescripcion: null,
-    ejercicios: lesionRegistro ? ejerciciosPorLesion(lesionRegistro) : [],
+    ejercicios: ejerciciosDeLesiones(lesionesPaciente),
   };
 }

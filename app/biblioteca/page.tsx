@@ -4,20 +4,22 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import BibliotecaFiltro from "@/components/BibliotecaFiltro";
 import FormLesion from "@/components/FormLesion";
+import RegistrarActividad from "@/components/RegistrarActividad";
 import { obtenerUsuario } from "@/lib/sesion";
 import { obtenerAcceso } from "@/lib/acceso";
-import { lesiones } from "@/lib/data";
+import { lesionesActivas, nombreLesion } from "@/lib/rutina";
 
 export default async function Biblioteca() {
   const usuario = await obtenerUsuario();
   if (!usuario) redirect("/login");
 
   const acceso = await obtenerAcceso(usuario.id);
-  const lesionRegistro = lesiones.find((l) => l.slug === acceso.lesionRegistro);
+  const activas = lesionesActivas(acceso.lesionesPaciente);
 
   return (
     <>
       <Nav />
+      <RegistrarActividad />
       <main className="flex-1">
         <section className="max-w-6xl mx-auto px-6 md:px-10 pt-14 pb-8">
           <h1 className="font-display text-3xl md:text-4xl text-ink max-w-lg">
@@ -35,11 +37,11 @@ export default async function Biblioteca() {
                   Ver o cambiar prescripción
                 </Link>
               </p>
-            ) : !lesionRegistro ? (
+            ) : acceso.lesionesPaciente.length === 0 ? (
               <>
                 <p>
-                  No pudimos leer la lesión guardada en tu perfil. Elígela de
-                  nuevo para ver tus ejercicios, o{" "}
+                  No pudimos leer las lesiones guardadas en tu perfil. Elige la
+                  principal de nuevo para ver tus ejercicios, o{" "}
                   <Link href="/prescripcion" className="text-teal-deep underline">
                     sube tu prescripción
                   </Link>
@@ -47,17 +49,37 @@ export default async function Biblioteca() {
                 </p>
                 <FormLesion />
               </>
+            ) : activas.length === 0 ? (
+              <p>
+                Todas tus lesiones están marcadas como terminadas. Si necesitas
+                seguir ejercitándote, agrega o reactiva una en{" "}
+                <Link href="/cuenta" className="text-teal-deep underline">
+                  Mi cuenta
+                </Link>
+                .
+              </p>
             ) : (
               <p>
                 Ejercicios para{" "}
                 <span className="text-ink">
-                  {lesionRegistro?.nombre ?? "tu lesión"}
+                  {activas.map((l) => nombreLesion(l.slug)).join(", ")}
                 </span>
-                , la lesión que elegiste al crear tu cuenta. Si tienes una
-                prescripción médica, súbela para ver solo los ejercicios que
-                te indicaron.{" "}
+                . Puedes agregar o cambiar tus lesiones en{" "}
+                <Link href="/cuenta" className="text-teal-deep underline">
+                  Mi cuenta
+                </Link>
+                . Si tienes una prescripción médica, súbela para ver solo los
+                ejercicios que te indicaron.{" "}
                 <Link href="/prescripcion" className="text-teal-deep underline">
                   Subir prescripción
+                </Link>
+              </p>
+            )}
+            {!usuario.correoVerificado && (
+              <p className="mt-3">
+                Confirma tu correo para recibir recordatorios.{" "}
+                <Link href="/cuenta" className="text-teal-deep underline">
+                  Ir a Mi cuenta
                 </Link>
               </p>
             )}
@@ -65,7 +87,12 @@ export default async function Biblioteca() {
         </section>
 
         <section className="max-w-6xl mx-auto px-6 md:px-10 py-6">
-          <BibliotecaFiltro ejercicios={acceso.ejercicios} />
+          <BibliotecaFiltro
+            ejercicios={acceso.ejercicios}
+            principal={
+              acceso.origen === "lesion" ? activas.find((l) => l.principal)?.slug : undefined
+            }
+          />
         </section>
       </main>
       <Footer />

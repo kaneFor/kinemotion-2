@@ -6,10 +6,7 @@ import FormPrescripcion from "@/components/FormPrescripcion";
 import FormLesion from "@/components/FormLesion";
 import { obtenerUsuario } from "@/lib/sesion";
 import { obtenerAcceso } from "@/lib/acceso";
-import { lesiones } from "@/lib/data";
-
-const nombreLesion = (slug: string | null) =>
-  lesiones.find((l) => l.slug === slug)?.nombre ?? "sin lesión registrada";
+import { lesionesActivas, nombreLesion } from "@/lib/rutina";
 
 export default async function Prescripcion() {
   const usuario = await obtenerUsuario();
@@ -17,6 +14,7 @@ export default async function Prescripcion() {
 
   const acceso = await obtenerAcceso(usuario.id);
   const p = acceso.prescripcion;
+  const activas = lesionesActivas(acceso.lesionesPaciente);
 
   return (
     <>
@@ -43,15 +41,15 @@ export default async function Prescripcion() {
                   {new Date(p.subidaEn).toLocaleDateString("es-CL")}.
                 </p>
                 <p>
-                  Lesión detectada:{" "}
+                  {p.lesiones.length > 1 ? "Lesiones detectadas:" : "Lesión detectada:"}{" "}
                   <span className="text-ink">
                     {p.lesiones.map(nombreLesion).join(", ")}
                   </span>
                 </p>
                 <p>
                   {p.ejercicios.length > 0
-                    ? "Ejercicios indicados:"
-                    : "La prescripción no nombra ejercicios concretos, así que tienes acceso a todos los de esa lesión:"}
+                    ? "Ejercicios de tu rutina (si una lesión no tiene ejercicios concretos en el documento, ves todos los de esa lesión):"
+                    : "La prescripción no nombra ejercicios concretos, así que tienes acceso a todos los de cada lesión detectada:"}
                 </p>
                 <ul className="list-disc pl-5 text-ink">
                   {acceso.ejercicios.map((e) => (
@@ -59,20 +57,36 @@ export default async function Prescripcion() {
                   ))}
                 </ul>
               </div>
-            ) : !acceso.lesionRegistro ? (
+            ) : acceso.lesionesPaciente.length === 0 ? (
               <>
                 <p className="mt-3 text-sm text-ink-soft">
-                  No has subido una prescripción y no pudimos leer la lesión
-                  de tu perfil. Elígela de nuevo o sube tu prescripción abajo.
+                  No has subido una prescripción y no pudimos leer las lesiones
+                  de tu perfil. Elige la principal de nuevo o sube tu
+                  prescripción abajo.
                 </p>
                 <FormLesion />
               </>
+            ) : activas.length === 0 ? (
+              <p className="mt-3 text-sm text-ink-soft">
+                No has subido una prescripción y todas tus lesiones están
+                marcadas como terminadas. Puedes cambiarlas en{" "}
+                <Link href="/cuenta" className="text-teal-deep underline">
+                  Mi cuenta
+                </Link>
+                .
+              </p>
             ) : (
               <p className="mt-3 text-sm text-ink-soft">
                 No has subido una prescripción. Ves los{" "}
                 {acceso.ejercicios.length} ejercicios de{" "}
-                <span className="text-ink">{nombreLesion(acceso.lesionRegistro)}</span>,
-                la lesión que elegiste al crear tu cuenta.
+                <span className="text-ink">
+                  {activas.map((l) => nombreLesion(l.slug)).join(", ")}
+                </span>
+                , las lesiones activas de{" "}
+                <Link href="/cuenta" className="text-teal-deep underline">
+                  Mi cuenta
+                </Link>
+                .
               </p>
             )}
             <Link

@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "No encontramos en la prescripción ninguna de las lesiones o ejercicios que cubre KineMotion. Seguirás viendo los ejercicios de la lesión que elegiste al registrarte.",
+          "No encontramos en la prescripción ninguna de las lesiones o ejercicios que cubre KineMotion. Seguirás viendo los ejercicios de las lesiones de tu cuenta.",
       },
       { status: 422 }
     );
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** Quita la prescripción: vuelve a los ejercicios de la lesión del registro. */
+/** Quita la prescripción: vuelve a los ejercicios de las lesiones de la cuenta. */
 export async function DELETE() {
   const usuario = await obtenerUsuario();
   if (!usuario) {

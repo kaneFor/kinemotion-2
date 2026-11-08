@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PosturaCamera from "@/components/PosturaCamera";
+import RegistrarActividad from "@/components/RegistrarActividad";
 import { obtenerUsuario } from "@/lib/sesion";
 import { obtenerAcceso } from "@/lib/acceso";
 
@@ -23,6 +24,7 @@ export default async function Practica({
   return (
     <>
       <Nav />
+      {ejercicio && <RegistrarActividad />}
       <main className="flex-1">
         <section className="max-w-6xl mx-auto px-6 md:px-10 pt-14 pb-10">
           <Link href="/biblioteca" className="text-sm text-ink-soft hover:text-ink">
@@ -43,7 +45,7 @@ export default async function Practica({
             <div className="max-w-xl border-t border-line pt-6 text-ink-soft text-sm">
               Este ejercicio no está en tu rutina. Solo puedes practicar los
               ejercicios que indica tu prescripción médica o, si no la
-              subiste, los de la lesión que elegiste al registrarte.
+              subiste, los de las lesiones activas de tu cuenta.
             </div>
           ) : ejercicio.angleTarget ? (
             <PosturaCamera target={ejercicio.angleTarget} ejercicioId={ejercicio.id} />
