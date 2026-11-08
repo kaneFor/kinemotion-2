@@ -30,6 +30,24 @@ Next.js 16 (App Router), TypeScript y Tailwind CSS v4.
 - `/progreso` — "Mi progreso": días seguidos, calendario del mes, gráfico del
   dolor y conteo por ejercicio de los últimos 30 días.
 
+### Tus datos: descargar, corregir y eliminar
+
+En "Mi cuenta" el paciente puede:
+
+- **Descargar sus datos** (`/api/cuenta/datos`): un JSON con la cuenta, las
+  lesiones, la prescripción, el consentimiento y todo el historial,
+  descifrados. Nunca incluye la contraseña ni tokens.
+- **Cambiar su nombre y su correo**. El correo nuevo se valida como en el
+  registro y queda sin confirmar, así que los recordatorios se pausan hasta
+  abrir el enlace. Si el correo anterior estaba confirmado, recibe un aviso.
+- **Eliminar su cuenta** con su contraseña: se borra al instante de todas las
+  colecciones (`lib/cuenta.ts`). **Toda colección nueva que guarde datos de un
+  usuario debe agregarse a `COLECCIONES_DEL_USUARIO`.**
+
+La app no puede borrar los correos ya enviados: quedan en la bandeja del
+paciente y en "Enviados" de la cuenta de Gmail, que conviene vaciar cada cierto
+tiempo.
+
 ### Historial de progreso
 
 Colección `historial_progreso` (`lib/historial.ts`): un documento por paciente

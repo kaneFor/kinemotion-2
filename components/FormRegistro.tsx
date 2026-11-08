@@ -148,6 +148,8 @@ export default function FormRegistro() {
             previa, y aceptas que tus datos clínicos se almacenen
             cifrados conforme a la Ley N° 19.628 sobre Protección de la
             Vida Privada, usados únicamente para personalizar tu rutina.
+            Puedes descargar o eliminar tus datos cuando quieras desde Mi
+            cuenta.
           </p>
           <label className="mt-4 flex items-start gap-3 text-sm text-ink">
             <input

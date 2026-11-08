@@ -4,6 +4,8 @@ import { ObjectId } from "mongodb";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import BotonReenviarCorreo from "@/components/BotonReenviarCorreo";
+import EliminarCuenta from "@/components/EliminarCuenta";
+import { FormCorreo, FormNombre } from "@/components/FormDatosPersonales";
 import FormLesion from "@/components/FormLesion";
 import FormRecordatorios from "@/components/FormRecordatorios";
 import GestionLesiones from "@/components/GestionLesiones";
@@ -89,12 +91,14 @@ export default async function Cuenta() {
           </div>
 
           <div className="mt-10 border-t border-line pt-6">
-            <h2 className="font-display text-base text-ink">Correo</h2>
-            <p className="mt-3 text-sm text-ink-soft">
-              <span className="text-ink">{usuario.correo}</span>{" "}
+            <h2 className="font-display text-base text-ink">Datos personales</h2>
+            <FormNombre nombre={usuario.nombre} />
+            <p className="mt-6 text-sm text-ink-soft">
+              Correo: <span className="text-ink">{usuario.correo}</span>{" "}
               {usuario.correoVerificado ? "está confirmado." : "todavía no está confirmado."}
             </p>
             {!usuario.correoVerificado && <BotonReenviarCorreo />}
+            <FormCorreo />
           </div>
 
           <div className="mt-10 border-t border-line pt-6">
@@ -108,6 +112,24 @@ export default async function Cuenta() {
               inicial={recordatorios}
               correoVerificado={usuario.correoVerificado}
             />
+          </div>
+          <div className="mt-10 border-t border-line pt-6">
+            <h2 className="font-display text-base text-ink">Tus datos</h2>
+            <p className="mt-3 text-sm text-ink-soft leading-relaxed">
+              Descarga una copia de todo lo que guardamos sobre ti: tu cuenta,
+              tus lesiones, tu prescripción y tu historial. También puedes
+              eliminar tu cuenta y todos sus datos.
+            </p>
+            <a
+              href="/api/cuenta/datos"
+              download
+              className="mt-4 inline-block text-sm font-medium border border-line text-ink px-4 py-2 rounded-sm hover:border-ink transition-colors"
+            >
+              Descargar mis datos
+            </a>
+            <div>
+              <EliminarCuenta />
+            </div>
           </div>
         </section>
       </main>

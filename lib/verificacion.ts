@@ -81,8 +81,13 @@ export async function confirmarCorreo(token: string): Promise<boolean> {
     { _id: registro.usuarioId, correo: registro.correo },
     { $set: { correoVerificadoEn: new Date() } }
   );
+  if (r.matchedCount === 0) {
+    // Enlace de un correo anterior: no debe invalidar el del correo actual.
+    await verificaciones.deleteOne({ _id: registro._id });
+    return false;
+  }
   await verificaciones.deleteMany({ usuarioId: registro.usuarioId });
-  return r.matchedCount === 1;
+  return true;
 }
 
 export async function limpiarVerificacionesVencidas(): Promise<void> {
