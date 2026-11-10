@@ -18,14 +18,21 @@ const fechaCorta = (fecha: string) =>
     timeZone: "UTC",
   });
 
-const detalle = (s: CumplimientoSemana) =>
+const detalle = (s: CumplimientoSemana, sinDatos: string) =>
   s.porcentaje === null
-    ? "Sin sesiones programadas"
-    : `${s.completadas} de ${s.programadas} ${s.programadas === 1 ? "sesión" : "sesiones"}` +
+    ? sinDatos
+    :`${s.completadas} de ${s.programadas} ${s.programadas === 1 ? "sesión" : "sesiones"}` +
       (s.suspendidas ? ` · ${s.suspendidas} suspendida${s.suspendidas === 1 ? "" : "s"} por dolor` : "");
 
 /** Cumplimiento autodeclarado por semana, de 0 a 100 %. */
-export default function GraficoCumplimiento({ semanas }: { semanas: CumplimientoSemana[] }) {
+export default function GraficoCumplimiento({
+  semanas,
+  sinDatos = "Sin sesiones programadas",
+}: {
+  semanas: CumplimientoSemana[];
+  /** Qué decir de una semana sin porcentaje. */
+  sinDatos?: string;
+}) {
   const [activa, setActiva] = useState<number | null>(null);
   const ranura = AREA_X / semanas.length;
   const ancho = Math.min(44, ranura - 10);
@@ -53,7 +60,7 @@ export default function GraficoCumplimiento({ semanas }: { semanas: Cumplimiento
               <g
                 key={sem.lunes}
                 tabIndex={0}
-                aria-label={`Semana del ${fechaCorta(sem.lunes)}: ${p === null ? "sin sesiones programadas" : `${p} %, ${detalle(sem)}`}`}
+                aria-label={`Semana del ${fechaCorta(sem.lunes)}: ${p === null ? sinDatos.toLowerCase() : `${p} %, ${detalle(sem, sinDatos)}`}`}
                 onPointerEnter={() => setActiva(i)}
                 onPointerLeave={() => setActiva(null)}
                 onFocus={() => setActiva(i)}
@@ -97,7 +104,7 @@ export default function GraficoCumplimiento({ semanas }: { semanas: Cumplimiento
             <p className="text-ink-soft">Semana del {fechaCorta(s.lunes)}</p>
             <p className="mt-1">
               <strong className="text-ink">{s.porcentaje === null ? "—" : `${s.porcentaje} %`}</strong>{" "}
-              <span className="text-ink-soft">{detalle(s)}</span>
+              <span className="text-ink-soft">{detalle(s, sinDatos)}</span>
             </p>
           </div>
         )}
@@ -118,7 +125,7 @@ export default function GraficoCumplimiento({ semanas }: { semanas: Cumplimiento
               <tr key={sem.lunes} className="border-t border-line">
                 <td className="py-1 text-ink-soft">{fechaCorta(sem.lunes)}</td>
                 <td className="py-1 text-ink">{sem.porcentaje === null ? "—" : `${sem.porcentaje} %`}</td>
-                <td className="py-1 text-ink-soft">{detalle(sem)}</td>
+                <td className="py-1 text-ink-soft">{detalle(sem, sinDatos)}</td>
               </tr>
             ))}
           </tbody>

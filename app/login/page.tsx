@@ -5,7 +5,8 @@ import FormLogin from "@/components/FormLogin";
 import { obtenerUsuario } from "@/lib/sesion";
 
 export default async function Login() {
-  if (await obtenerUsuario()) redirect("/biblioteca");
+  const usuario = await obtenerUsuario();
+  if (usuario) redirect(usuario.admin ? "/admin" : "/biblioteca");
 
   return (
     <>

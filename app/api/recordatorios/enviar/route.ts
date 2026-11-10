@@ -34,6 +34,8 @@ export async function GET(req: NextRequest) {
     .find(
       {
         correoVerificadoEn: { $exists: true },
+        deshabilitadaEn: { $exists: false },
+        demo: { $ne: true },
         "recordatorios.modo": { $in: ["personalizado", "inactividad"] },
       },
       {

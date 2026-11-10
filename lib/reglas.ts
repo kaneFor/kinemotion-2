@@ -1,3 +1,4 @@
+import { inclinacionCabeza, inclinacionHombros } from "./cuello";
 import { anguloEntrePuntos, VIS_MIN, type Lado, type Punto } from "./pose";
 
 /**
@@ -25,8 +26,8 @@ export type Regla = {
 };
 
 const IDX = {
-  izq: { hombro: 11, cadera: 23, rodilla: 25, tobillo: 27, talon: 29, punta: 31 },
-  der: { hombro: 12, cadera: 24, rodilla: 26, tobillo: 28, talon: 30, punta: 32 },
+  izq: { hombro: 11, codo: 13, cadera: 23, rodilla: 25, tobillo: 27, talon: 29, punta: 31 },
+  der: { hombro: 12, codo: 14, cadera: 24, rodilla: 26, tobillo: 28, talon: 30, punta: 32 },
 } as const;
 
 const visible = (p?: Punto) => (p?.visibility ?? 0) >= VIS_MIN;
@@ -60,28 +61,40 @@ function elevacionTalon(lm: Punto[], lado: Lado): number | null {
   );
 }
 
+/** Separación del brazo respecto del tronco (cadera-hombro-codo), en grados. */
+function separacionBrazo(lm: Punto[], lado: Lado): number | null {
+  const i = IDX[lado];
+  const c = lm[i.cadera];
+  const h = lm[i.hombro];
+  const co = lm[i.codo];
+  if (!visible(c) || !visible(h) || !visible(co)) return null;
+  return anguloEntrePuntos(c, h, co);
+}
+
+const reglasElevacionTalones: Regla[] = [
+  {
+    id: "rodillas",
+    prioridad: 1,
+    mensaje: "Mantén las rodillas estiradas mientras subes.",
+    evaluar: (lm, lado) => {
+      const a = anguloRodilla(lm, lado);
+      return a === null ? null : a < 160;
+    },
+  },
+  {
+    id: "tronco",
+    prioridad: 2,
+    mensaje: "Mantén el tronco más vertical, sin inclinarte hacia adelante.",
+    evaluar: (lm, lado) => {
+      const t = inclinacionTronco(lm, lado);
+      return t === null ? null : t > 12;
+    },
+  },
+];
+
 export const reglasPorEjercicio: Record<string, Regla[]> = {
   // Elevación de talones
-  "et-03": [
-    {
-      id: "rodillas",
-      prioridad: 1,
-      mensaje: "Mantén las rodillas estiradas mientras subes.",
-      evaluar: (lm, lado) => {
-        const a = anguloRodilla(lm, lado);
-        return a === null ? null : a < 160;
-      },
-    },
-    {
-      id: "tronco",
-      prioridad: 2,
-      mensaje: "Mantén el tronco más vertical, sin inclinarte hacia adelante.",
-      evaluar: (lm, lado) => {
-        const t = inclinacionTronco(lm, lado);
-        return t === null ? null : t > 12;
-      },
-    },
-  ],
+  "et-03": reglasElevacionTalones,
 
   // Sentadilla en step
   "et-06": [
@@ -101,6 +114,48 @@ export const reglasPorEjercicio: Record<string, Regla[]> = {
       evaluar: (lm, lado) => {
         const t = inclinacionTronco(lm, lado);
         return t === null ? null : t > 35;
+      },
+    },
+  ],
+
+  // Elevación de talón en escalón: mismas reglas que la elevación de talones
+  "fp-04": reglasElevacionTalones,
+
+  // Movilidad de codo activa
+  "ep-06": [
+    {
+      id: "codo-pegado",
+      prioridad: 1,
+      mensaje: "Mantén el codo junto al cuerpo; mueve solo el antebrazo.",
+      evaluar: (lm, lado) => {
+        const s = separacionBrazo(lm, lado);
+        return s === null ? null : s > 35;
+      },
+    },
+  ],
+
+  // Rotación cervical suave
+  "cv-02": [
+    {
+      id: "cabeza-derecha",
+      prioridad: 1,
+      mensaje: "Gira la cabeza sin inclinarla, como si miraras por sobre tu hombro.",
+      evaluar: (lm) => {
+        const i = inclinacionCabeza(lm);
+        return i === null ? null : Math.abs(i) > 20;
+      },
+    },
+  ],
+
+  // Inclinación lateral de cuello
+  "cv-03": [
+    {
+      id: "hombros-abajo",
+      prioridad: 1,
+      mensaje: "No subas el hombro: acerca la oreja al hombro, no el hombro a la oreja.",
+      evaluar: (lm) => {
+        const h = inclinacionHombros(lm);
+        return h === null ? null : Math.abs(h) > 10;
       },
     },
   ],

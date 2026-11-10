@@ -20,6 +20,8 @@ export type UsuarioSesion = {
   nombre: string;
   correo: string;
   correoVerificado: boolean;
+  /** Administrador de contenido: entra a /admin y no tiene rutina. */
+  admin: boolean;
 };
 
 const hashToken = (token: string) =>
@@ -63,13 +65,15 @@ export async function obtenerUsuario(): Promise<UsuarioSesion | null> {
     const usuario = await db
       .collection("usuarios")
       .findOne({ _id: sesion.usuarioId }, { projection: { passwordHash: 0 } });
-    if (!usuario) return null;
+    // Una cuenta deshabilitada por el administrador no tiene sesión.
+    if (!usuario || usuario.deshabilitadaEn) return null;
 
     return {
       id: usuario._id.toString(),
       nombre: usuario.nombre,
       correo: usuario.correo,
       correoVerificado: Boolean(usuario.correoVerificadoEn),
+      admin: usuario.rol === "admin",
     };
   } catch (err) {
     // Sin base de datos no hay sesión, pero las páginas públicas siguen
@@ -77,6 +81,12 @@ export async function obtenerUsuario(): Promise<UsuarioSesion | null> {
     console.error("Error leyendo la sesión:", err);
     return null;
   }
+}
+
+/** Usuario de la sesión si es administrador, o null. */
+export async function obtenerAdmin(): Promise<UsuarioSesion | null> {
+  const usuario = await obtenerUsuario();
+  return usuario?.admin ? usuario : null;
 }
 
 /** Cierra todas las sesiones de la cuenta salvo la de este navegador. */

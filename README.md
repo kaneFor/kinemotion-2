@@ -88,6 +88,37 @@ y el dolor van **cifrados**, porque revelan la lesión; solo `usuarioId` y
 incluido el aviso de dolor (≥ 7, o un alza de 3 o más durante la rutina),
 cuyos umbrales son provisorios y debe validar el kinesiólogo.
 
+### Panel del administrador (RF15, RF16)
+
+El administrador de contenido entra con el mismo inicio de sesión y llega a
+`/admin`. Nadie puede hacerse administrador desde la web: la cuenta se crea
+con un script, que muestra una contraseña al azar una sola vez:
+
+```bash
+npm run crear-admin -- correo@ejemplo.cl "Nombre"
+npm run crear-admin -- --quitar correo@ejemplo.cl
+```
+
+- **Indicadores** (`/admin`, `lib/indicadores.ts`): cumplimiento
+  autodeclarado de todos los pacientes (sesiones completadas ÷ programadas,
+  8 semanas), promedios de la encuesta, dolor declarado, uso de la cámara y
+  una tabla por lesión. Sin nombres ni comentarios, y un grupo con menos de
+  5 pacientes no se muestra.
+- **Cuentas** (`/admin/cuentas`): nombre, correo, fecha de registro y
+  estado. Habilitar o deshabilitar una cuenta; deshabilitada no puede
+  iniciar sesión ni recibe recordatorios. Los datos clínicos no se ven.
+
+Para una presentación se pueden cargar **datos de demostración** (30
+pacientes inventados con ~8 semanas de historial). Llevan `demo: true`, el
+panel los marca y permite esconderlos, no pueden iniciar sesión ni reciben
+correos, y `exportar-validacion` los excluye. **No son resultados de la
+validación.**
+
+```bash
+npm run datos-demo              # crear
+npm run datos-demo -- --borrar  # eliminar
+```
+
 ### Videos de los ejercicios
 
 Cada ejercicio de `lib/data.ts` tiene un video de YouTube (`youtube`). 27 son
@@ -116,6 +147,20 @@ que peor detectan los modelos) sino por cuánto sube el cuerpo — hombros y
 caderas — respecto de la postura base, en % del tronco (`lib/elevacion.ts`).
 El contador (`lib/contador.ts`) exige volver a la posición inicial para
 sumar, así que quedarse arriba no cuenta repeticiones extra.
+
+Ejercicios con cámara (6 de 30, en 4 de las 5 lesiones):
+
+| Ejercicio | Qué se mide | Vista |
+|---|---|---|
+| et-03 Elevación de talones · fp-04 Elevación de talón en escalón | Cuánto sube el cuerpo (% del tronco) | Lado o frente, cuerpo completo |
+| et-06 Sentadilla en step | Ángulo de rodilla | Lado |
+| ep-06 Movilidad de codo activa | Ángulo de codo | Lado |
+| cv-02 Rotación cervical · cv-03 Inclinación lateral | Giro e inclinación de la cabeza, hacia cualquier lado (`lib/cuello.ts`) | Frente, cabeza y hombros |
+
+Los ejercicios de dedos, agarre y giro del antebrazo no se pueden medir con
+un modelo de cuerpo; necesitarían un modelo de manos (trabajo futuro). Todos
+los umbrales de `lib/data.ts` y `lib/reglas.ts` son provisorios y debe
+calibrarlos el kinesiólogo revisor.
 
 Los modelos ONNX están en `public/modelos/` (~100 MB en total; el navegador
 descarga solo los que usa: ~76 MB en computador, ~26 MB en celular):

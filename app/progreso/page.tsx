@@ -28,6 +28,8 @@ const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 export default async function Progreso() {
   const usuario = await obtenerUsuario();
   if (!usuario) redirect("/login");
+  // El administrador no tiene rutina: su espacio es /admin.
+  if (usuario.admin) redirect("/admin");
 
   const hoy = hoyEnChile();
   const dias = await leerDias(usuario.id, sumarDias(hoy, -89));

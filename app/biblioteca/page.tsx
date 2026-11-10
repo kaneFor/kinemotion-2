@@ -14,6 +14,8 @@ import { lesionesActivas, nombreLesion } from "@/lib/rutina";
 export default async function Biblioteca() {
   const usuario = await obtenerUsuario();
   if (!usuario) redirect("/login");
+  // El administrador no tiene rutina: su espacio es /admin.
+  if (usuario.admin) redirect("/admin");
 
   const acceso = await obtenerAcceso(usuario.id);
   const activas = lesionesActivas(acceso.lesionesPaciente);

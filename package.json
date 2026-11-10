@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "probar-mongo": "node scripts/probar-mongo.mjs",
-    "exportar-validacion": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/exportar-validacion.mjs"
+    "exportar-validacion": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/exportar-validacion.mjs",
+    "crear-admin": "node scripts/crear-admin.mjs",
+    "datos-demo": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/datos-demo.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.131.0",

@@ -25,8 +25,9 @@ export async function pedirRecuperacion(correoEscrito: string): Promise<void> {
   const correo = correoEscrito.trim();
   const usuario = await db
     .collection("usuarios")
-    .findOne({ correo: { $in: [correo.toLowerCase(), correo] } }, { projection: { nombre: 1, correo: 1 } });
-  if (!usuario) return;
+    .findOne({ correo: { $in: [correo.toLowerCase(), correo] } }, { projection: { nombre: 1, correo: 1, demo: 1, deshabilitadaEn: 1 } });
+  // Las cuentas de demostración no tienen un correo real.
+  if (!usuario || usuario.demo || usuario.deshabilitadaEn) return;
 
   const recuperaciones = db.collection("recuperaciones_contrasena");
   const ahora = Date.now();

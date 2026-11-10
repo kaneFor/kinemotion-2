@@ -30,6 +30,8 @@ export default async function Sesion({
 }) {
   const usuario = await obtenerUsuario();
   if (!usuario) redirect("/login");
+  // El administrador no tiene rutina: su espacio es /admin.
+  if (usuario.admin) redirect("/admin");
 
   const { sinDolor, fin } = await searchParams;
   const { ejercicios } = await obtenerAcceso(usuario.id);

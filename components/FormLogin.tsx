@@ -33,7 +33,8 @@ export default function FormLogin() {
         );
         return;
       }
-      router.push("/biblioteca");
+      const data = await res.json().catch(() => ({}));
+      router.push(data.destino === "/admin" ? "/admin" : "/biblioteca");
       router.refresh();
     } catch {
       setEnviando(false);

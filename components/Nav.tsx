@@ -12,10 +12,21 @@ export default async function Nav() {
           KineMotion
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-ink-soft">
-          <Link href="/biblioteca" className="hover:text-ink transition-colors">
-            {usuario ? "Mi rutina" : "Biblioteca de ejercicios"}
-          </Link>
-          {usuario ? (
+          {usuario?.admin ? (
+            <>
+              <Link href="/admin" className="hover:text-ink transition-colors">
+                Indicadores
+              </Link>
+              <Link href="/admin/cuentas" className="hover:text-ink transition-colors">
+                Cuentas
+              </Link>
+            </>
+          ) : (
+            <Link href="/biblioteca" className="hover:text-ink transition-colors">
+              {usuario ? "Mi rutina" : "Biblioteca de ejercicios"}
+            </Link>
+          )}
+          {usuario?.admin ? null : usuario ? (
             <>
               <Link href="/progreso" className="hover:text-ink transition-colors">
                 Mi progreso
@@ -43,9 +54,13 @@ export default async function Nav() {
             <span className="hidden sm:inline text-sm text-ink-soft">
               Hola, {usuario.nombre.split(" ")[0]}
             </span>
-            <Link href="/cuenta" className="text-sm text-ink-soft hover:text-ink transition-colors">
-              Mi cuenta
-            </Link>
+            {usuario.admin ? (
+              <span className="text-xs uppercase tracking-wide text-teal-deep">Administración</span>
+            ) : (
+              <Link href="/cuenta" className="text-sm text-ink-soft hover:text-ink transition-colors">
+                Mi cuenta
+              </Link>
+            )}
             <BotonCerrarSesion />
           </div>
         ) : (

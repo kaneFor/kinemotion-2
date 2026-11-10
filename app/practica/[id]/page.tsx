@@ -17,6 +17,8 @@ export default async function Practica({
   const desdeSesion = (await searchParams).desde === "sesion";
   const usuario = await obtenerUsuario();
   if (!usuario) redirect("/login");
+  // El administrador no tiene rutina: su espacio es /admin.
+  if (usuario.admin) redirect("/admin");
 
   // Solo se puede practicar lo que el paciente tiene asignado; un ejercicio
   // fuera de su prescripción o lesión se trata igual que uno inexistente.

@@ -12,6 +12,7 @@ import { colocacionDe, guias, textoGuia } from "@/lib/guias";
 import { Calibrador } from "@/lib/calibracion";
 import { ContadorReps } from "@/lib/contador";
 import { MedidorElevacion, medirTronco } from "@/lib/elevacion";
+import { inclinacionCabeza, rotacionCabeza } from "@/lib/cuello";
 import { cerrarRep, marcarInicio, nuevoBuffer, registrarCuadro } from "@/lib/repeticion";
 import {
   MAX_REPS_POR_SOLICITUD,
@@ -103,6 +104,7 @@ export default function PosturaCamera({
   const [calibrador] = useState(() => new Calibrador());
   const [medidorElevacion] = useState(() => new MedidorElevacion());
   const unidad = target.joint === "elevacion" ? "%" : "°";
+  const esCuello = target.joint === "cuello-inclinacion" || target.joint === "cuello-rotacion";
   const [base, setBase] = useState<number | null>(null);
   const [encuadreMalo, setEncuadreMalo] = useState(false);
 
@@ -349,8 +351,14 @@ export default function PosturaCamera({
         };
 
         const filtro = new FiltroPose();
-        // En "elevacion" el lado solo lo usan las reglas de postura.
-        const selectorLado = new SelectorLado(target.joint === "elevacion" ? "rodilla" : target.joint);
+        // En "elevacion" y en el cuello el lado solo lo usan las reglas de postura.
+        const selectorLado = new SelectorLado(
+          target.joint === "elevacion"
+            ? "rodilla"
+            : target.joint === "cuello-inclinacion" || target.joint === "cuello-rotacion"
+            ? "codo"
+            : target.joint
+        );
         const contador = new ContadorReps(target);
         contadorRef.current = contador;
         let ultimoTiempoVideo = -1;
@@ -406,7 +414,7 @@ export default function PosturaCamera({
               ahora - ultimoSinPersonaRef.current > 15000
             ) {
               ultimoSinPersonaRef.current = ahora;
-              hablar("No te veo bien. Colócate de lado, a unos dos metros de la cámara, con el cuerpo completo en el encuadre.");
+              hablar(`No te veo bien. ${colocacion}`);
             }
           } else {
             sinPersonaDesdeRef.current = null;
@@ -455,6 +463,15 @@ export default function PosturaCamera({
               if (tronco) {
                 recienCalibrado = medidorElevacion.agregar(tronco);
                 valor = medidorElevacion.elevacion(tronco);
+              }
+            } else if (target.joint === "cuello-inclinacion" || target.joint === "cuello-rotacion") {
+              // Hacia cualquier lado: se mide la distancia a la postura base.
+              const medida =
+                target.joint === "cuello-inclinacion" ? inclinacionCabeza(medible) : rotacionCabeza(medible);
+              sinMedicion = medida === null;
+              if (medida !== null) {
+                recienCalibrado = calibrador.agregar(medida);
+                valor = calibrador.base === null ? null : Math.abs(medida - calibrador.base);
               }
             } else {
               const anguloMedido = anguloDeArticulacion(medible, target.joint, lado);
@@ -553,7 +570,7 @@ export default function PosturaCamera({
       stream?.getTracks().forEach((t) => t.stop());
       motor?.cerrar();
     };
-  }, [target, ejercicioId, revisarPendientes, calibrador, medidorElevacion, motorPreferido]);
+  }, [target, ejercicioId, colocacion, revisarPendientes, calibrador, medidorElevacion, motorPreferido]);
 
   return (
     <div className="w-full max-w-xl mx-auto">
@@ -582,7 +599,9 @@ export default function PosturaCamera({
 
         {estado === "listo" && encuadreMalo && (
           <div className="absolute bottom-3 left-3 right-3 bg-ink/85 text-paper text-xs text-center rounded-sm px-3 py-2">
-            {target.joint === "elevacion"
+            {esCuello
+              ? "No veo bien tu cara y tus hombros. Ponte de frente, a un metro, con la cabeza y los hombros dentro del encuadre."
+              : target.joint === "elevacion"
               ? "No veo bien tu cuerpo. Aléjate hasta que se vea completo, de la cabeza a los pies."
               : target.joint === "tobillo"
               ? "No veo bien tu pie. Baja la cámara a la altura de tus rodillas y aléjate hasta que se vean tus pies completos."
@@ -592,7 +611,9 @@ export default function PosturaCamera({
 
         {estado === "listo" && !encuadreMalo && target.relativo && base === null && (
           <div className="absolute bottom-3 left-3 right-3 bg-ink/85 text-paper text-xs text-center rounded-sm px-3 py-2">
-            Quédate quieto de pie, de lado, un segundo: estoy tomando tu postura base.
+            {esCuello
+              ? "Mira al frente, quieto, un segundo: estoy tomando tu postura base."
+              : "Quédate quieto de pie, de lado, un segundo: estoy tomando tu postura base."}
           </div>
         )}
 
@@ -607,7 +628,9 @@ export default function PosturaCamera({
         <div>
           <p className="text-ink-soft label-tech">
             {target.descripcion} ·{" "}
-            {target.relativo
+            {esCuello
+              ? `objetivo: al menos ${target.min}${unidad} hacia cualquier lado desde tu postura base`
+              : target.relativo
               ? `objetivo: subir al menos ${target.min}${unidad} sobre tu base`
               : `objetivo ${target.min}${unidad}–${target.max}${unidad}`}
           </p>

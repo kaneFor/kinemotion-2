@@ -33,8 +33,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: CREDENCIALES_INVALIDAS }, { status: 401 });
     }
 
+    if (usuario.deshabilitadaEn) {
+      return NextResponse.json(
+        { error: "Esta cuenta está deshabilitada. Si crees que es un error, escríbenos." },
+        { status: 403 }
+      );
+    }
+
     await crearSesion(usuario._id);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, destino: usuario.rol === "admin" ? "/admin" : "/biblioteca" });
   } catch (err) {
     console.error("Error en /api/login:", err);
     const respuesta: { error: string; pista?: string } = {

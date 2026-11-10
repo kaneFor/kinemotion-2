@@ -21,6 +21,14 @@ export const COLOCACION =
 const colocacionPorEjercicio: Record<string, string> = {
   "et-03":
     "Apoya el celular a la altura de tu cintura, a unos dos metros y medio, y ponte de lado o de frente. Debe verse tu cuerpo completo, de la cabeza a los pies, con buena luz. Si necesitas apoyo, usa el respaldo de una silla que no te tape.",
+  "fp-04":
+    "Apoya el celular a la altura de tu cintura, a unos dos metros y medio, y ponte de lado sobre el escalón. Debe verse tu cuerpo completo, de la cabeza a los pies, con buena luz. Apóyate en una pared o barandilla que no te tape.",
+  "ep-06":
+    "Ponte de lado, a unos dos metros, con el brazo que vas a mover hacia la cámara. Deben verse tu hombro, tu codo y tu muñeca durante todo el movimiento.",
+  "cv-02":
+    "Siéntate o párate de frente a la cámara, a un metro, con la cámara a la altura de tu cara. Deben verse tu cabeza y tus dos hombros. Al empezar, mira al frente quieto un segundo.",
+  "cv-03":
+    "Siéntate o párate de frente a la cámara, a un metro, con la cámara a la altura de tu cara. Deben verse tu cabeza y tus dos hombros. Al empezar, mira al frente quieto un segundo.",
 };
 
 export const colocacionDe = (ejercicioId: string) =>

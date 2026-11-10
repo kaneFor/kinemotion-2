@@ -21,6 +21,8 @@ import { obtenerUsuario } from "@/lib/sesion";
 export default async function Cuenta() {
   const usuario = await obtenerUsuario();
   if (!usuario) redirect("/login");
+  // El administrador no tiene rutina: su espacio es /admin.
+  if (usuario.admin) redirect("/admin");
 
   const acceso = await obtenerAcceso(usuario.id);
   const db = await getDb();

@@ -36,7 +36,7 @@ export type Acceso = {
  * otra ENCRYPTION_KEY), devuelve null en vez de botar la página: el
  * paciente vuelve a elegir su lesión y se guarda con la llave actual.
  */
-function leerCifrado(campo: unknown): string | null {
+export function leerCifrado(campo: unknown): string | null {
   if (!campo) return null;
   try {
     return descifrar(campo as CampoCifrado);
@@ -53,7 +53,7 @@ const esLesionConocida = (slug: string | null) =>
   lesiones.some((l) => l.slug === slug);
 
 /** Las cuentas anteriores guardan una sola lesión en el campo `lesion`. */
-function leerLesiones(perfil: Record<string, unknown> | null): LesionPaciente[] {
+export function leerLesiones(perfil: Record<string, unknown> | null): LesionPaciente[] {
   const guardadas = leerCifrado(perfil?.lesiones);
   if (guardadas) {
     return (JSON.parse(guardadas) as LesionPaciente[]).filter((l) =>

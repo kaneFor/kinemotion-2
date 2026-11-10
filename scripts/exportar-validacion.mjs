@@ -51,7 +51,8 @@ await cliente.connect();
 const db = cliente.db(process.env.MONGODB_DB || env.MONGODB_DB || "kinemotion");
 const hoy = enChile(new Date());
 
-const usuarios = (await db.collection("usuarios").find({}, { projection: { correo: 1, creadoEn: 1, diasRutina: 1, recordatorios: 1 } }).toArray())
+// Sin administradores ni cuentas de demostración: no son participantes.
+const usuarios = (await db.collection("usuarios").find({ rol: { $ne: "admin" }, demo: { $ne: true } }, { projection: { correo: 1, creadoEn: 1, diasRutina: 1, recordatorios: 1 } }).toArray())
   .filter((u) => !excluidos.has(String(u.correo).toLowerCase()));
 // Códigos en orden aleatorio, para que no reflejen el orden de registro.
 usuarios.sort(() => Math.random() - 0.5);
