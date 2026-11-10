@@ -3,7 +3,6 @@ import Image from "next/image";
 import Nav from "@/components/Nav";
 import Aparecer from "@/components/Aparecer";
 import Footer from "@/components/Footer";
-import MotionLoop from "@/components/MotionLoop";
 import { lesiones } from "@/lib/data";
 // Fotos de Unsplash (licencia libre, uso comercial permitido); créditos en el pie de página.
 import fotoPortada from "@/public/fotos/portada.jpg";
@@ -14,24 +13,24 @@ import fotoEnCasa from "@/public/fotos/en-casa.jpg";
 
 const pasos = [
   {
-    titulo: "Crea tu cuenta y elige tu lesión",
+    titulo: "Crea tu cuenta y declara tu condición",
     detalle:
-      "Esguince de tobillo, fascitis plantar, tendinitis de muñeca, epicondilitis o cervicalgia. Si tienes una prescripción médica, súbela y tu rutina se ajusta a lo que te indicaron.",
+      "Indica la condición que te diagnosticaron: esguince de tobillo, fascitis plantar, tendinitis de muñeca, epicondilitis o cervicalgia. Si tienes la prescripción de tu profesional, súbela y tu rutina se ajusta a lo indicado.",
   },
   {
-    titulo: "Revisa tu rutina",
+    titulo: "Sigue tu rutina en video",
     detalle:
-      "Ves solo los ejercicios que te corresponden, cada uno con su demostración en movimiento, ritmo, series y una explicación que puedes escuchar.",
+      "Ves solo los ejercicios que te corresponden, con el ciclo completo del movimiento, sus series, su ritmo y una explicación que puedes escuchar.",
   },
   {
-    titulo: "Síguelo con el video",
+    titulo: "Practica, con cámara si quieres",
     detalle:
-      "Sigues el ciclo completo del movimiento, fase concéntrica y excéntrica, en vez de adivinar a partir de un dibujo fijo.",
+      "En algunos ejercicios hay una guía opcional por cámara que cuenta tus repeticiones y mide tu ángulo como referencia. No evalúa la calidad clínica del movimiento.",
   },
   {
-    titulo: "Practica frente a la cámara",
+    titulo: "Registra tu avance",
     detalle:
-      "En los ejercicios con guía por cámara, la app cuenta tus repeticiones y te avisa, también por voz, si conviene corregir la postura.",
+      "Marcas cada ejercicio que completas y anotas tu dolor. Si quieres, te recordamos tu rutina por correo en los días que elijas.",
   },
 ];
 
@@ -41,12 +40,12 @@ const pilares = [
     detalle: "Cada ejercicio se ve completo, con su ritmo y rango, en vez de un dibujo fijo.",
   },
   {
-    titulo: "Corrección por cámara",
-    detalle: "Cuenta tus repeticiones y te avisa si la postura se desvía, mientras ejercitas.",
-  },
-  {
     titulo: "Según tu prescripción",
     detalle: "Sube la indicación de tu profesional y verás solo los ejercicios que te corresponden.",
+  },
+  {
+    titulo: "Recordatorios y registro",
+    detalle: "Te recordamos tu rutina por correo y registras cada ejercicio que completas, junto con tu dolor.",
   },
   {
     titulo: "Privada por diseño",
@@ -56,26 +55,33 @@ const pilares = [
 
 const perfiles = [
   {
-    titulo: "Estudiantes y trabajadores",
+    titulo: "Jóvenes que estudian o trabajan",
     foto: fotoEstudiante,
     alt: "Mujer trabajando sentada frente a un computador portátil",
     detalle:
-      "Con una lesión leve por teclado, celular, deporte o postura, que necesitan hacer su rutina en casa, en el horario que les queda libre.",
+      "Tienes entre 18 y 29 años, una lesión ya diagnosticada y ejercicios indicados por un profesional, y necesitas hacerlos en casa en el tiempo que te queda libre.",
   },
   {
-    titulo: "Pacientes con indicación kinésica",
+    titulo: "Pacientes que ya pasaron por la consulta",
     foto: fotoPaciente,
     alt: "Persona estirando la pierna y el pie sobre una colchoneta en su casa",
     detalle:
-      "Que ya pasaron por la consulta y quieren repetir en casa los ejercicios tal como se los enseñaron, sin olvidar la técnica.",
+      "Quieres repetir en casa los ejercicios tal como te los enseñaron, sin olvidar la técnica entre una sesión y otra.",
   },
   {
-    titulo: "Kinesiólogos",
+    titulo: "Y tu kinesiólogo",
     foto: fotoKinesiologo,
     alt: "Kinesiólogo evaluando la rodilla de un paciente en camilla",
     detalle:
-      "Que buscan que sus pacientes ejecuten bien entre sesiones, con una guía visual en lugar de un folleto que se pierde.",
+      "Su indicación queda a tu alcance entre sesiones, tal como te la dio. KineMotion se apoya en ella y no reemplaza su evaluación.",
   },
+];
+
+const noEsParaTi = [
+  "No tienes un diagnóstico ni ejercicios indicados por un profesional.",
+  "Tienes señales de alarma, como dolor intenso, hinchazón que aumenta, adormecimiento o pérdida de fuerza.",
+  "Estás en una rehabilitación posoperatoria, neurológica o respiratoria.",
+  "Eres menor de 18 años.",
 ];
 
 const beneficios = [
@@ -83,8 +89,9 @@ const beneficios = [
     para: "Para el paciente",
     items: [
       "Rutina clara, con series, ritmo y explicación por voz.",
-      "Conteo de repeticiones y avisos de postura en tiempo real.",
-      "Su avance y su dolor registrados día a día.",
+      "Registro de su avance y de su dolor, día a día.",
+      "Recordatorios por correo en los días que elija.",
+      "En algunos ejercicios, guía opcional por cámara.",
       "Sin instalar aplicaciones: funciona en el navegador.",
       "Sus datos clínicos protegidos y cifrados.",
     ],
@@ -93,10 +100,9 @@ const beneficios = [
     para: "Para el kinesiólogo",
     items: [
       "El paciente accede solo a los ejercicios que indica la prescripción.",
-      "Menos errores de técnica entre una sesión y otra.",
+      "El paciente tiene la técnica en video entre una sesión y otra.",
       "Una herramienta de apoyo que no reemplaza su evaluación.",
     ],
-    pronto: "Próximamente: informe de progreso del paciente para el kinesiólogo.",
   },
 ];
 
@@ -130,8 +136,12 @@ export default function Home() {
               </Link>
             </div>
             <p className="mt-8 text-sm text-ink-soft border-t border-line pt-6 max-w-md">
-              Cinco lesiones documentadas, treinta ejercicios en video, acceso
-              inmediato desde cualquier navegador.
+              Para jóvenes de 18 a 29 años con una lesión ya diagnosticada y
+              ejercicios indicados por su kinesiólogo.{" "}
+              <span className="text-ink">
+                Complementa la indicación de tu profesional: no diagnostica ni
+                la reemplaza.
+              </span>
             </p>
           </Aparecer>
           <Aparecer retraso={150}>
@@ -147,8 +157,17 @@ export default function Home() {
                   className="object-cover object-[60%_center]"
                 />
               </div>
-              <div className="absolute -bottom-6 -left-4 md:-left-8 w-44 md:w-56 bg-paper/95 rounded-sm shadow-lg p-2 border border-line">
-                <MotionLoop />
+              <div className="absolute -bottom-6 -left-4 md:-left-8 w-40 md:w-56 bg-paper rounded-sm shadow-lg p-1.5 border border-line">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-[2px]">
+                  <Image
+                    src={fotoKinesiologo}
+                    alt="Kinesiólogo guiando la flexión de rodilla de un paciente en la camilla"
+                    fill
+                    placeholder="blur"
+                    sizes="(min-width: 768px) 224px, 160px"
+                    className="object-cover object-[55%_45%]"
+                  />
+                </div>
               </div>
             </div>
           </Aparecer>
@@ -179,7 +198,7 @@ export default function Home() {
                 <li>Se olvida o se pierde entre los apuntes de la semana.</li>
                 <li>
                   Deja al paciente adivinando la postura a partir de un
-                  dibujo fijo, lo que favorece los patrones compensatorios.
+                  dibujo fijo.
                 </li>
               </ul>
             </Aparecer>
@@ -189,8 +208,8 @@ export default function Home() {
                 <li>Muestra el ciclo completo del ejercicio en movimiento.</li>
                 <li>Está siempre a mano en tu navegador, en el celular o el computador.</li>
                 <li>
-                  Reduce el margen de error en la ejecución, siguiendo la
-                  técnica que muestra el video.
+                  Te muestra la técnica completa, para que no dependas de
+                  recordar un dibujo.
                 </li>
               </ul>
             </Aparecer>
@@ -221,12 +240,26 @@ export default function Home() {
               </Aparecer>
             ))}
           </div>
+          <Aparecer className="mt-12 max-w-2xl border-l-2 border-danger pl-5">
+            <h3 className="font-display text-lg text-ink">No es para ti si…</h3>
+            <ul className="mt-3 space-y-2 text-sm text-ink-soft leading-relaxed">
+              {noEsParaTi.map((motivo) => (
+                <li key={motivo} className="flex gap-3">
+                  <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-danger" />
+                  {motivo}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-ink">
+              En esos casos, consulta primero a un profesional de la salud.
+            </p>
+          </Aparecer>
         </section>
 
         <section id="lesiones" className="max-w-6xl mx-auto px-6 md:px-10 py-16 border-t border-line">
           <Aparecer>
             <h2 className="font-display text-2xl md:text-3xl text-ink max-w-lg">
-              Cinco lesiones leves, documentadas con protocolos clínicos
+              Cinco condiciones de baja complejidad, ya diagnosticadas por tu profesional
             </h2>
           </Aparecer>
           <div className="mt-10 grid md:grid-cols-2 gap-x-10 gap-y-8">
@@ -262,8 +295,9 @@ export default function Home() {
                 Tu rehabilitación, en tu propio living.
               </h2>
               <p className="mt-4 text-paper/80 leading-relaxed">
-                Sin traslados ni salas de espera: haces tu rutina en casa, a
-                tu ritmo, con una guía que te muestra cómo hacerla bien.
+                Entre una consulta y otra, haces en casa los ejercicios que te
+                indicaron, a tu ritmo, con una guía que te muestra cómo
+                hacerlos.
               </p>
             </Aparecer>
           </div>
@@ -308,9 +342,6 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                {b.pronto && (
-                  <p className="mt-5 text-xs label-tech text-kinetic-deep">{b.pronto}</p>
-                )}
               </Aparecer>
             ))}
           </div>
