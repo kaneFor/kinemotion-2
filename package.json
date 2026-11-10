@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "probar-mongo": "node scripts/probar-mongo.mjs"
+    "probar-mongo": "node scripts/probar-mongo.mjs",
+    "exportar-validacion": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/exportar-validacion.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.131.0",

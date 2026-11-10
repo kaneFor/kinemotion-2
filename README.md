@@ -48,6 +48,37 @@ La app no puede borrar los correos ya enviados: quedan en la bandeja del
 paciente y en "Enviados" de la cuenta de Gmail, que conviene vaciar cada cierto
 tiempo.
 
+### Recuperar y cambiar la contraseña
+
+- "¿Olvidaste tu contraseña?" (`/olvide-contrasena`): siempre responde lo
+  mismo y al instante; el correo se envía después de responder (`after`), para
+  no revelar qué correos tienen cuenta. Máximo 3 enlaces por hora y cuenta.
+- El enlace (`/restablecer`) dura 1 hora y sirve una vez; en la colección
+  `recuperaciones_contrasena` solo se guarda su hash. Al usarlo se cierran
+  todas las sesiones y llega un aviso por correo.
+- En "Mi cuenta" se cambia con la contraseña actual; cierra las demás sesiones.
+
+La recuperación de contraseña figuraba fuera del MVP en el Proyecto de Título
+(secciones 2.4 y 4.1.3); se incorporó el 10 de noviembre de 2026.
+
+### Cumplimiento semanal y encuesta
+
+- **Días de rutina** (Mi cuenta): los días en que el profesional indicó
+  ejercitarse. Por defecto, todos. Los recordatorios "En mis días de rutina"
+  usan esos mismos días.
+- **Cumplimiento autodeclarado semanal** (`cumplimientoSemana` en
+  `lib/progreso.ts`), según la sección 2.4 del proyecto: días con la rutina
+  completa ÷ días de rutina de la semana × 100, sin contar en el denominador
+  los días suspendidos por dolor ("Tengo dolor: suspender la rutina de hoy").
+  Se calcula con los días de rutina actuales, también para semanas pasadas.
+- **Encuesta semanal** (colección `encuestas`, cifrada): utilidad, claridad y
+  dificultad de 1 a 5, más un comentario opcional. Aparece al completar la
+  rutina y en "Mi progreso".
+- **Exportar para la validación**: `npm run exportar-validacion` escribe en
+  `validacion/<fecha>/` (ignorada por git) tres CSV anonimizados con códigos
+  P01, P02… y muestra los promedios. Con `-- --excluir a@x.cl,b@x.cl` se
+  dejan fuera cuentas de prueba.
+
 ### Historial de progreso
 
 Colección `historial_progreso` (`lib/historial.ts`): un documento por paciente

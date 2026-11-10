@@ -17,9 +17,10 @@ export default async function Biblioteca() {
 
   const acceso = await obtenerAcceso(usuario.id);
   const activas = lesionesActivas(acceso.lesionesPaciente);
+  const diaHoy = await leerDia(usuario.id, hoyEnChile());
   const hoy = estadoRutina(
     acceso.ejercicios.map((e) => e.id),
-    await leerDia(usuario.id, hoyEnChile())
+    diaHoy
   );
   const total = acceso.ejercicios.length;
 
@@ -97,10 +98,14 @@ export default async function Biblioteca() {
             <div className="max-w-xl border border-line rounded-sm p-5">
               <p className="label-tech text-xs text-ink-soft">Rutina de hoy</p>
               <p className="mt-1 font-display text-lg text-ink">
-                {hoy.completa ? "✓ Completa" : `${hoy.hechos.length} de ${total} ejercicios hechos`}
+                {diaHoy.suspendido
+                  ? "Suspendida por dolor"
+                  : hoy.completa
+                  ? "✓ Completa"
+                  : `${hoy.hechos.length} de ${total} ejercicios hechos`}
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-4">
-                {!hoy.completa && (
+                {!hoy.completa && !diaHoy.suspendido && (
                   <Link
                     href="/sesion"
                     className="bg-teal text-paper px-6 py-3 rounded-sm font-medium hover:bg-teal-deep transition-colors"

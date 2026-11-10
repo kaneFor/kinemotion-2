@@ -19,11 +19,13 @@ export type DiaProgreso = {
   dolorDespues?: number;
   /** Ejercicios que tenía la rutina ese día, para saber si la completó. */
   totalRutina?: number;
+  /** Rutina suspendida por dolor: no cuenta como sesión programada. */
+  suspendido?: boolean;
 };
 
 export type EventoProgreso =
   | { accion: "hecho" | "deshacer" | "saltar"; ejercicioId: string }
-  | { accion: "reintentar" }
+  | { accion: "reintentar" | "suspender" | "reanudar" }
   | { accion: "dolor"; momento: "antes" | "despues"; valor: number }
   | {
       accion: "serie";
@@ -63,6 +65,10 @@ export function aplicarEvento(
       return { ...dia, saltados: [...dia.saltados, evento.ejercicioId] };
     case "reintentar":
       return { ...dia, saltados: [] };
+    case "suspender":
+      return { ...dia, suspendido: true };
+    case "reanudar":
+      return { ...dia, suspendido: false };
     case "dolor":
       return evento.momento === "antes"
         ? { ...dia, dolorAntes: evento.valor }
@@ -124,4 +130,84 @@ export function racha(dias: Map<string, DiaProgreso>, hoy: string): number {
     fecha = sumarDias(fecha, -1);
   }
   return total;
+}
+
+export const TODOS_LOS_DIAS = [0, 1, 2, 3, 4, 5, 6];
+
+export const DIAS_SEMANA = [
+  { valor: 1, nombre: "Lun" },
+  { valor: 2, nombre: "Mar" },
+  { valor: 3, nombre: "Mié" },
+  { valor: 4, nombre: "Jue" },
+  { valor: 5, nombre: "Vie" },
+  { valor: 6, nombre: "Sáb" },
+  { valor: 0, nombre: "Dom" },
+];
+
+/**
+ * Días de la semana en que el paciente debe hacer su rutina (0 = domingo).
+ * Antes se elegían solo para los recordatorios, por eso se usan esos si
+ * todavía no definió sus días de rutina.
+ */
+export function diasDeRutina(usuario: {
+  diasRutina?: number[];
+  recordatorios?: { modo?: string; dias?: number[] };
+}): number[] {
+  if (usuario.diasRutina?.length) return usuario.diasRutina;
+  if (usuario.recordatorios?.modo === "personalizado" && usuario.recordatorios.dias?.length) {
+    return usuario.recordatorios.dias;
+  }
+  return TODOS_LOS_DIAS;
+}
+
+export const diaDeLaSemana = (fecha: string) => new Date(`${fecha}T12:00:00Z`).getUTCDay();
+
+/** Lunes de la semana de una fecha. */
+export const lunesDe = (fecha: string) => sumarDias(fecha, -((diaDeLaSemana(fecha) + 6) % 7));
+
+export type CumplimientoSemana = {
+  lunes: string;
+  programadas: number;
+  completadas: number;
+  suspendidas: number;
+  /** null si la semana no tiene sesiones programadas. */
+  porcentaje: number | null;
+};
+
+/**
+ * Cumplimiento autodeclarado de una semana, como lo define el proyecto:
+ * sesiones completadas ÷ sesiones programadas × 100, sin contar en el
+ * denominador las sesiones suspendidas por dolor. Una sesión completada es
+ * un día con la rutina completa; cuenta aunque no fuera un día programado,
+ * hasta llegar al total programado. Solo se consideran los días entre
+ * `desde` (creación de la cuenta) y `hoy`.
+ */
+export function cumplimientoSemana(
+  dias: Map<string, DiaProgreso>,
+  diasRutina: number[],
+  lunes: string,
+  hoy: string,
+  desde = "0000-01-01"
+): CumplimientoSemana {
+  let programadas = 0;
+  let suspendidas = 0;
+  let completadas = 0;
+  for (let i = 0; i < 7; i++) {
+    const fecha = sumarDias(lunes, i);
+    if (fecha > hoy || fecha < desde) continue;
+    const dia = dias.get(fecha);
+    if (diasRutina.includes(diaDeLaSemana(fecha))) {
+      if (dia?.suspendido) suspendidas++;
+      else programadas++;
+    }
+    if (!dia?.suspendido && completoRutina(dia)) completadas++;
+  }
+  completadas = Math.min(completadas, programadas);
+  return {
+    lunes,
+    programadas,
+    completadas,
+    suspendidas,
+    porcentaje: programadas > 0 ? Math.round((completadas / programadas) * 100) : null,
+  };
 }

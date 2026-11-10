@@ -3,10 +3,18 @@ import { redirect } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ExerciseCard from "@/components/ExerciseCard";
-import { AccionesEjercicio, BotonReintentar, PreguntaDolor } from "@/components/AccionesSesion";
+import {
+  AccionesEjercicio,
+  BotonReanudar,
+  BotonReintentar,
+  BotonSuspender,
+  PreguntaDolor,
+} from "@/components/AccionesSesion";
+import EncuestaSemanal from "@/components/EncuestaSemanal";
 import { obtenerAcceso } from "@/lib/acceso";
+import { leerEncuestas } from "@/lib/encuesta";
 import { leerDia } from "@/lib/historial";
-import { dolorPreocupante, estadoRutina } from "@/lib/progreso";
+import { dolorPreocupante, estadoRutina, lunesDe } from "@/lib/progreso";
 import { hoyEnChile } from "@/lib/recordatorios";
 import { nombreLesion } from "@/lib/rutina";
 import { obtenerUsuario } from "@/lib/sesion";
@@ -26,8 +34,11 @@ export default async function Sesion({
   const { sinDolor, fin } = await searchParams;
   const { ejercicios } = await obtenerAcceso(usuario.id);
   const rutina = ejercicios.map((e) => e.id);
-  const dia = await leerDia(usuario.id, hoyEnChile());
+  const hoy = hoyEnChile();
+  const dia = await leerDia(usuario.id, hoy);
   const estado = estadoRutina(rutina, dia);
+  const encuestaPendiente =
+    estado.completa && !(await leerEncuestas(usuario.id)).some((e) => e.semana === lunesDe(hoy));
   const actual = ejercicios.find((e) => e.id === estado.siguiente);
 
   const preguntarAntes =
@@ -67,7 +78,23 @@ export default async function Sesion({
               </div>
 
               <div className="mt-10">
-                {preguntarAntes ? (
+                {dia.suspendido ? (
+                  <div>
+                    <h2 className="font-display text-xl text-ink">Suspendiste la rutina de hoy por dolor</h2>
+                    <p className="mt-2 text-sm text-ink-soft leading-relaxed">
+                      Descansa. Si el dolor no mejora o aparecen señales de
+                      alarma, consulta a tu kinesiólogo o médico antes de
+                      seguir con los ejercicios. Este día no cuenta en contra
+                      de tu cumplimiento.
+                    </p>
+                    <BotonReanudar />
+                    <p className="mt-6 text-sm">
+                      <Link href="/progreso" className="text-teal-deep underline">
+                        Ver mi progreso
+                      </Link>
+                    </p>
+                  </div>
+                ) : preguntarAntes ? (
                   <PreguntaDolor momento="antes" omitir="/sesion?sinDolor=1" />
                 ) : actual ? (
                   <>
@@ -79,6 +106,7 @@ export default async function Sesion({
                       <ExerciseCard ejercicio={actual} desdeSesion />
                     </div>
                     <AccionesEjercicio ejercicioId={actual.id} />
+                    <BotonSuspender />
                   </>
                 ) : preguntarDespues ? (
                   <PreguntaDolor momento="despues" omitir="/sesion?fin=1" />
@@ -89,6 +117,7 @@ export default async function Sesion({
                     total={rutina.length}
                     saltados={estado.saltados.length}
                     alerta={dolorPreocupante(dia.dolorAntes, dia.dolorDespues)}
+                    encuesta={encuestaPendiente}
                   />
                 )}
               </div>
@@ -130,12 +159,14 @@ function Resumen({
   total,
   saltados,
   alerta,
+  encuesta,
 }: {
   completa: boolean;
   hechos: number;
   total: number;
   saltados: number;
   alerta: boolean;
+  encuesta: boolean;
 }) {
   return (
     <div>
@@ -157,6 +188,7 @@ function Resumen({
         </p>
       )}
       {saltados > 0 && <BotonReintentar cantidad={saltados} />}
+      {encuesta && <EncuestaSemanal />}
       <p className="mt-6 text-sm">
         <Link href="/progreso" className="text-teal-deep underline">
           Ver mi progreso

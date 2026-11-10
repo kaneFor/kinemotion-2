@@ -13,7 +13,7 @@ const reps = z.number().int().min(0).max(500);
 
 const Evento = z.discriminatedUnion("accion", [
   z.object({ accion: z.enum(["hecho", "deshacer", "saltar"]), ejercicioId: idEjercicio }),
-  z.object({ accion: z.literal("reintentar") }),
+  z.object({ accion: z.enum(["reintentar", "suspender", "reanudar"]) }),
   z.object({
     accion: z.literal("dolor"),
     momento: z.enum(["antes", "despues"]),

@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DIAS_SEMANA, type ModoRecordatorio, type Recordatorios } from "@/lib/recordatorios";
+import type { ModoRecordatorio } from "@/lib/recordatorios";
 
 const OPCIONES: { modo: ModoRecordatorio; titulo: string; detalle: string }[] = [
   { modo: "apagado", titulo: "Apagados", detalle: "No te enviaremos recordatorios." },
   {
     modo: "personalizado",
-    titulo: "Personalizado",
-    detalle: "Te escribimos los días que elijas, si ese día no completas tu rutina.",
+    titulo: "En mis días de rutina",
+    detalle: "Te escribimos en tus días de rutina, si ese día no la completas.",
   },
   {
     modo: "inactividad",
@@ -22,18 +22,14 @@ export default function FormRecordatorios({
   inicial,
   correoVerificado,
 }: {
-  inicial: Recordatorios;
+  inicial: ModoRecordatorio;
   correoVerificado: boolean;
 }) {
   const router = useRouter();
-  const [modo, setModo] = useState(inicial.modo);
-  const [dias, setDias] = useState(inicial.dias);
+  const [modo, setModo] = useState(inicial);
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-
-  const alternarDia = (dia: number) =>
-    setDias((d) => (d.includes(dia) ? d.filter((x) => x !== dia) : [...d, dia]));
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -44,7 +40,7 @@ export default function FormRecordatorios({
       const res = await fetch("/api/recordatorios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modo, dias }),
+        body: JSON.stringify({ modo }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -79,29 +75,6 @@ export default function FormRecordatorios({
           </label>
         ))}
 
-        {modo === "personalizado" && (
-          <div className="flex flex-wrap gap-2 pl-6">
-            {DIAS_SEMANA.map((d) => {
-              const on = dias.includes(d.valor);
-              return (
-                <button
-                  key={d.valor}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => alternarDia(d.valor)}
-                  className={
-                    "text-sm px-3 py-1.5 rounded-sm border transition-colors " +
-                    (on
-                      ? "bg-ink text-paper border-ink"
-                      : "border-line text-ink-soft hover:border-ink hover:text-ink")
-                  }
-                >
-                  {d.nombre}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </fieldset>
 
       <p className="text-xs text-ink-soft">

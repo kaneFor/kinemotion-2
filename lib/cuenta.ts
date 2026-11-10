@@ -3,7 +3,9 @@ import { getDb } from "@/lib/mongodb";
 import { obtenerAcceso } from "@/lib/acceso";
 import { enviarCorreo, escaparHtml } from "@/lib/correo";
 import { ejercicios } from "@/lib/data";
+import { leerEncuestas } from "@/lib/encuesta";
 import { leerDias } from "@/lib/historial";
+import { DIAS_SEMANA, diasDeRutina } from "@/lib/progreso";
 import { nombreLesion } from "@/lib/rutina";
 
 /**
@@ -13,6 +15,8 @@ import { nombreLesion } from "@/lib/rutina";
  */
 const COLECCIONES_DEL_USUARIO = [
   "historial_progreso",
+  "encuestas",
+  "recuperaciones_contrasena",
   "verificaciones_correo",
   "sesiones",
   "perfiles_clinicos",
@@ -30,6 +34,7 @@ export async function exportarDatos(usuarioId: string) {
   const perfil = await db.collection("perfiles_clinicos").findOne({ usuarioId: _id });
   const acceso = await obtenerAcceso(usuarioId);
   const dias = await leerDias(usuarioId, "0000-01-01");
+  const encuestas = await leerEncuestas(usuarioId);
 
   const perfilIlegible =
     Boolean(perfil?.lesiones || perfil?.lesion) && acceso.lesionesPaciente.length === 0;
@@ -43,7 +48,10 @@ export async function exportarDatos(usuarioId: string) {
       correo: usuario?.correo,
       creadaEn: usuario?.creadoEn,
       correoConfirmadoEn: usuario?.correoVerificadoEn ?? null,
-      recordatorios: usuario?.recordatorios ?? { modo: "apagado", dias: [] },
+      recordatorios: usuario?.recordatorios?.modo ?? "apagado",
+      diasDeRutina: diasDeRutina({ diasRutina: usuario?.diasRutina, recordatorios: usuario?.recordatorios }).map(
+        (d) => DIAS_SEMANA.find((x) => x.valor === d)?.nombre
+      ),
     },
     perfilClinico: {
       ...(perfilIlegible && {
@@ -72,7 +80,11 @@ export async function exportarDatos(usuarioId: string) {
         seriesConCamara: d.series.map((s) => ({ ...s, ejercicioId: undefined, ejercicio: nombreEjercicio(s.ejercicioId) })),
         dolorAntes: d.dolorAntes ?? null,
         dolorDespues: d.dolorDespues ?? null,
+        suspendidoPorDolor: Boolean(d.suspendido),
       })),
+    encuestas: encuestas
+      .filter((e) => !e.omitida)
+      .map((e) => ({ semanaDel: e.semana, ...e, semana: undefined })),
   };
 }
 

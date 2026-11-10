@@ -79,6 +79,16 @@ export async function obtenerUsuario(): Promise<UsuarioSesion | null> {
   }
 }
 
+/** Cierra todas las sesiones de la cuenta salvo la de este navegador. */
+export async function cerrarOtrasSesiones(usuarioId: string) {
+  const token = (await cookies()).get(COOKIE)?.value;
+  const db = await getDb();
+  await db.collection("sesiones").deleteMany({
+    usuarioId: new ObjectId(usuarioId),
+    ...(token ? { tokenHash: { $ne: hashToken(token) } } : {}),
+  });
+}
+
 export async function cerrarSesion() {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE)?.value;

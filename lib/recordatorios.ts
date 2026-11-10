@@ -1,9 +1,10 @@
 import crypto from "crypto";
 import { leerEnv } from "@/lib/env";
+import { diaDeLaSemana, diasDeRutina } from "@/lib/progreso";
 
 /**
  * Reglas de los recordatorios, sin acceso a la base de datos.
- *  - "personalizado": en los días de la semana que eligió el paciente
+ *  - "personalizado": en los días de rutina del paciente
  *  - "inactividad": todos los días
  * En ambos casos solo se envía si ese día no completó su rutina; eso lo
  * revisa la tarea diaria con el historial.
@@ -14,18 +15,9 @@ export type ModoRecordatorio = (typeof MODOS_RECORDATORIO)[number];
 
 export type Recordatorios = {
   modo: ModoRecordatorio;
-  dias: number[]; // 0 = domingo … 6 = sábado
+  /** Versión anterior: días elegidos solo para los recordatorios. */
+  dias?: number[];
 };
-
-export const DIAS_SEMANA = [
-  { valor: 1, nombre: "Lun" },
-  { valor: 2, nombre: "Mar" },
-  { valor: 3, nombre: "Mié" },
-  { valor: 4, nombre: "Jue" },
-  { valor: 5, nombre: "Vie" },
-  { valor: 6, nombre: "Sáb" },
-  { valor: 0, nombre: "Dom" },
-];
 
 /** Fecha de hoy en Chile como YYYY-MM-DD, sin importar la zona del servidor. */
 export const hoyEnChile = (ahora = new Date()) =>
@@ -36,11 +28,10 @@ export const hoyEnChile = (ahora = new Date()) =>
     day: "2-digit",
   }).format(ahora);
 
-const diaDeLaSemana = (fecha: string) => new Date(`${fecha}T12:00:00Z`).getUTCDay();
-
 export function tocaRecordatorio(
   usuario: {
     recordatorios?: Recordatorios;
+    diasRutina?: number[];
     ultimoRecordatorio?: string;
   },
   hoy: string
@@ -52,7 +43,7 @@ export function tocaRecordatorio(
   if (recordatorios.modo === "inactividad") return true;
   return (
     recordatorios.modo === "personalizado" &&
-    recordatorios.dias.includes(diaDeLaSemana(hoy))
+    diasDeRutina(usuario).includes(diaDeLaSemana(hoy))
   );
 }
 

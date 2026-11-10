@@ -7,6 +7,7 @@ import { leerDia } from "@/lib/historial";
 import { getDb } from "@/lib/mongodb";
 import { estadoRutina } from "@/lib/progreso";
 import { hoyEnChile, tocaRecordatorio, tokenBaja, type Recordatorios } from "@/lib/recordatorios";
+import { limpiarRecuperacionesVencidas } from "@/lib/contrasena";
 import { limpiarVerificacionesVencidas } from "@/lib/verificacion";
 
 // Una cuenta normal de Gmail admite 500 mensajes al día; se deja margen para
@@ -40,6 +41,7 @@ export async function GET(req: NextRequest) {
           nombre: 1,
           correo: 1,
           recordatorios: 1,
+          diasRutina: 1,
           ultimoRecordatorio: 1,
         },
       }
@@ -53,6 +55,7 @@ export async function GET(req: NextRequest) {
     if (enviados >= MAX_POR_EJECUCION) break;
     const estado = {
       recordatorios: usuario.recordatorios as Recordatorios,
+      diasRutina: usuario.diasRutina as number[] | undefined,
       ultimoRecordatorio: usuario.ultimoRecordatorio as string | undefined,
     };
     if (!tocaRecordatorio(estado, hoy)) continue;
@@ -63,9 +66,11 @@ export async function GET(req: NextRequest) {
       const id = usuario._id.toString();
       const { ejercicios } = await obtenerAcceso(id);
       if (ejercicios.length === 0) continue;
+      const dia = await leerDia(id, hoy);
+      if (dia.suspendido) continue;
       const hoyRutina = estadoRutina(
         ejercicios.map((e) => e.id),
-        await leerDia(id, hoy)
+        dia
       );
       if (hoyRutina.completa) continue;
 
@@ -99,6 +104,7 @@ export async function GET(req: NextRequest) {
   }
 
   await limpiarVerificacionesVencidas();
+  await limpiarRecuperacionesVencidas();
   return NextResponse.json({ ok: true, enviados, fallidos });
 }
 

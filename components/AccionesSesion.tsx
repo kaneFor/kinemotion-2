@@ -150,3 +150,40 @@ export function MarcaHecho({ ejercicioId }: { ejercicioId: string }) {
     </p>
   );
 }
+
+export function BotonSuspender() {
+  const { enviar, enviando, errorMsg } = useProgreso();
+  return (
+    <div className="mt-8 border-t border-line pt-4">
+      <button
+        type="button"
+        disabled={enviando}
+        onClick={() => enviar({ accion: "suspender" })}
+        className="text-sm text-danger underline hover:opacity-80 disabled:opacity-60"
+      >
+        Tengo dolor: suspender la rutina de hoy
+      </button>
+      <p className="mt-1 text-xs text-ink-soft">
+        Un día suspendido por dolor no cuenta en contra de tu cumplimiento.
+      </p>
+      {errorMsg && <p className="mt-2 text-sm text-danger">{errorMsg}</p>}
+    </div>
+  );
+}
+
+export function BotonReanudar() {
+  const { enviar, enviando, errorMsg } = useProgreso();
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        disabled={enviando}
+        onClick={() => enviar({ accion: "reanudar" })}
+        className={botonSecundario}
+      >
+        Retomar la rutina de hoy
+      </button>
+      {errorMsg && <p className="mt-2 text-sm text-danger">{errorMsg}</p>}
+    </div>
+  );
+}

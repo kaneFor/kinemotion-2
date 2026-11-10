@@ -5,12 +5,15 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import BotonReenviarCorreo from "@/components/BotonReenviarCorreo";
 import EliminarCuenta from "@/components/EliminarCuenta";
+import { FormCambiarContrasena } from "@/components/FormContrasena";
 import { FormCorreo, FormNombre } from "@/components/FormDatosPersonales";
+import FormDiasRutina from "@/components/FormDiasRutina";
 import FormLesion from "@/components/FormLesion";
 import FormRecordatorios from "@/components/FormRecordatorios";
 import GestionLesiones from "@/components/GestionLesiones";
 import { obtenerAcceso } from "@/lib/acceso";
 import { getDb } from "@/lib/mongodb";
+import { diasDeRutina } from "@/lib/progreso";
 import type { Recordatorios } from "@/lib/recordatorios";
 import { nombreLesion } from "@/lib/rutina";
 import { obtenerUsuario } from "@/lib/sesion";
@@ -23,12 +26,9 @@ export default async function Cuenta() {
   const db = await getDb();
   const preferencias = await db
     .collection("usuarios")
-    .findOne({ _id: new ObjectId(usuario.id) }, { projection: { recordatorios: 1 } });
-  const guardados = preferencias?.recordatorios as Recordatorios | undefined;
-  const recordatorios: Recordatorios = {
-    modo: guardados?.modo ?? "apagado",
-    dias: guardados?.dias ?? [],
-  };
+    .findOne({ _id: new ObjectId(usuario.id) }, { projection: { recordatorios: 1, diasRutina: 1 } });
+  const recordatorios = preferencias?.recordatorios as Recordatorios | undefined;
+  const dias = diasDeRutina({ diasRutina: preferencias?.diasRutina, recordatorios });
 
   return (
     <>
@@ -99,6 +99,17 @@ export default async function Cuenta() {
             </p>
             {!usuario.correoVerificado && <BotonReenviarCorreo />}
             <FormCorreo />
+            <FormCambiarContrasena />
+          </div>
+
+          <div className="mt-10 border-t border-line pt-6">
+            <h2 className="font-display text-base text-ink">Mis días de rutina</h2>
+            <p className="mt-3 text-sm text-ink-soft leading-relaxed">
+              Marca los días en que tu profesional te indicó hacer tus
+              ejercicios. Con ellos calculamos tu cumplimiento semanal y
+              enviamos los recordatorios.
+            </p>
+            <FormDiasRutina inicial={dias} />
           </div>
 
           <div className="mt-10 border-t border-line pt-6">
@@ -109,7 +120,7 @@ export default async function Cuenta() {
               </p>
             )}
             <FormRecordatorios
-              inicial={recordatorios}
+              inicial={recordatorios?.modo ?? "apagado"}
               correoVerificado={usuario.correoVerificado}
             />
           </div>
@@ -117,7 +128,7 @@ export default async function Cuenta() {
             <h2 className="font-display text-base text-ink">Tus datos</h2>
             <p className="mt-3 text-sm text-ink-soft leading-relaxed">
               Descarga una copia de todo lo que guardamos sobre ti: tu cuenta,
-              tus lesiones, tu prescripción y tu historial. También puedes
+              tus lesiones, tu prescripción, tu historial y tus encuestas. También puedes
               eliminar tu cuenta y todos sus datos.
             </p>
             <a

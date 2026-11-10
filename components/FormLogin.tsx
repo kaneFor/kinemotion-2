@@ -78,6 +78,9 @@ export default function FormLogin() {
             autoComplete="current-password"
             className="w-full border border-line bg-paper-dim/40 rounded-sm px-4 py-3 text-ink outline-none focus:border-teal"
           />
+          <Link href="/olvide-contrasena" className="mt-2 inline-block text-sm text-teal-deep underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
         </div>
 
         {errorMsg && <p className="text-sm text-danger">{errorMsg}</p>}

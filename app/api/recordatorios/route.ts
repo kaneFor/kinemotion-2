@@ -5,10 +5,7 @@ import { getDb } from "@/lib/mongodb";
 import { MODOS_RECORDATORIO } from "@/lib/recordatorios";
 import { obtenerUsuario } from "@/lib/sesion";
 
-const Preferencias = z.object({
-  modo: z.enum(MODOS_RECORDATORIO),
-  dias: z.array(z.number().int().min(0).max(6)).max(7),
-});
+const Preferencias = z.object({ modo: z.enum(MODOS_RECORDATORIO) });
 
 export async function POST(req: NextRequest) {
   const usuario = await obtenerUsuario();
@@ -20,16 +17,13 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Preferencias no válidas." }, { status: 400 });
   }
-  const { modo, dias } = parsed.data;
+  const { modo } = parsed.data;
 
   if (modo !== "apagado" && !usuario.correoVerificado) {
     return NextResponse.json(
       { error: "Confirma tu correo para activar los recordatorios." },
       { status: 403 }
     );
-  }
-  if (modo === "personalizado" && dias.length === 0) {
-    return NextResponse.json({ error: "Elige al menos un día." }, { status: 400 });
   }
 
   try {
@@ -38,7 +32,7 @@ export async function POST(req: NextRequest) {
       .collection("usuarios")
       .updateOne(
         { _id: new ObjectId(usuario.id) },
-        { $set: { recordatorios: { modo, dias: [...new Set(dias)] } } }
+        { $set: { "recordatorios.modo": modo } }
       );
     return NextResponse.json({ ok: true });
   } catch (err) {

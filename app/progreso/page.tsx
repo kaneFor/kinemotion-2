@@ -2,10 +2,24 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { ObjectId } from "mongodb";
+import EncuestaSemanal from "@/components/EncuestaSemanal";
+import GraficoCumplimiento from "@/components/GraficoCumplimiento";
 import GraficoDolor, { type PuntoDolor } from "@/components/GraficoDolor";
 import { ejercicios } from "@/lib/data";
+import { leerEncuestas } from "@/lib/encuesta";
 import { leerDias } from "@/lib/historial";
-import { completoRutina, hizoAlgo, racha, sumarDias, type DiaProgreso } from "@/lib/progreso";
+import { getDb } from "@/lib/mongodb";
+import {
+  completoRutina,
+  cumplimientoSemana,
+  diasDeRutina,
+  hizoAlgo,
+  lunesDe,
+  racha,
+  sumarDias,
+  type DiaProgreso,
+} from "@/lib/progreso";
 import { hoyEnChile } from "@/lib/recordatorios";
 import { obtenerUsuario } from "@/lib/sesion";
 
@@ -18,6 +32,21 @@ export default async function Progreso() {
   const hoy = hoyEnChile();
   const dias = await leerDias(usuario.id, sumarDias(hoy, -89));
   const diasSeguidos = racha(dias, hoy);
+
+  const cuenta = await (await getDb())
+    .collection("usuarios")
+    .findOne({ _id: new ObjectId(usuario.id) }, { projection: { creadoEn: 1, diasRutina: 1, recordatorios: 1 } });
+  const diasRutina = diasDeRutina({ diasRutina: cuenta?.diasRutina, recordatorios: cuenta?.recordatorios });
+  const desde = cuenta?.creadoEn instanceof Date ? hoyEnChile(cuenta.creadoEn) : "0000-01-01";
+  const estaSemana = lunesDe(hoy);
+  const semanas = Array.from({ length: 8 }, (_, i) => sumarDias(estaSemana, (i - 7) * 7))
+    .filter((lunes) => sumarDias(lunes, 6) >= desde)
+    .map((lunes) => cumplimientoSemana(dias, diasRutina, lunes, hoy, desde));
+  const actual = semanas[semanas.length - 1];
+
+  const encuestas = await leerEncuestas(usuario.id);
+  const respondidas = encuestas.filter((e) => !e.omitida);
+  const encuestaPendiente = !respondidas.some((e) => e.semana === estaSemana);
 
   const mes = hoy.slice(0, 7);
   const delMes = [...dias].filter(([fecha]) => fecha.startsWith(mes)).map(([, d]) => d);
@@ -84,6 +113,31 @@ export default async function Progreso() {
           </div>
 
           <div className="mt-12 border-t border-line pt-6">
+            <h2 className="font-display text-base text-ink">Cumplimiento semanal</h2>
+            <p className="mt-1 text-xs text-ink-soft leading-relaxed">
+              Rutinas completas en tus días de rutina, sin contar los días
+              suspendidos por dolor. Es tu cumplimiento autodeclarado, no una
+              medición clínica.{" "}
+              <Link href="/cuenta" className="text-teal-deep underline">
+                Cambiar mis días de rutina
+              </Link>
+            </p>
+            {actual && (
+              <p className="mt-4">
+                <span className="font-display text-4xl text-ink">
+                  {actual.porcentaje === null ? "—" : `${actual.porcentaje} %`}
+                </span>{" "}
+                <span className="text-sm text-ink-soft">
+                  esta semana
+                  {actual.porcentaje !== null &&
+                    ` · ${actual.completadas} de ${actual.programadas} ${actual.programadas === 1 ? "sesión" : "sesiones"} hasta hoy`}
+                </span>
+              </p>
+            )}
+            <GraficoCumplimiento semanas={semanas} />
+          </div>
+
+          <div className="mt-12 border-t border-line pt-6">
             <h2 className="font-display text-base text-ink">Este mes</h2>
             <Calendario hoy={hoy} dias={dias} />
           </div>
@@ -92,6 +146,47 @@ export default async function Progreso() {
             <h2 className="font-display text-base text-ink">Dolor en los últimos 30 días</h2>
             <p className="mt-1 text-xs text-ink-soft">De 0 (sin dolor) a 10 (máximo).</p>
             <GraficoDolor puntos={puntos} />
+          </div>
+
+          <div className="mt-12 border-t border-line pt-6">
+            <h2 className="font-display text-base text-ink">Cómo sentiste los ejercicios</h2>
+            {encuestaPendiente && <EncuestaSemanal permitirOmitir={false} />}
+            {respondidas.length > 0 ? (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="text-xs text-ink-soft">
+                    <tr>
+                      <th className="py-2 pr-4 font-normal">Semana del</th>
+                      <th className="py-2 pr-4 font-normal text-right">Utilidad</th>
+                      <th className="py-2 pr-4 font-normal text-right">Claridad</th>
+                      <th className="py-2 pr-4 font-normal text-right">Dificultad</th>
+                      <th className="py-2 font-normal">Comentario</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {respondidas.map((e) =>
+                      e.omitida ? null : (
+                        <tr key={e.semana} className="border-t border-line align-top">
+                          <td className="py-2 pr-4 text-ink-soft whitespace-nowrap">
+                            {new Date(`${e.semana}T12:00:00Z`).toLocaleDateString("es-CL", {
+                              day: "numeric",
+                              month: "short",
+                              timeZone: "UTC",
+                            })}
+                          </td>
+                          <td className="py-2 pr-4 text-right text-ink">{e.utilidad} / 5</td>
+                          <td className="py-2 pr-4 text-right text-ink">{e.claridad} / 5</td>
+                          <td className="py-2 pr-4 text-right text-ink">{e.dificultad} / 5</td>
+                          <td className="py-2 text-ink-soft">{e.comentario ?? "—"}</td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              !encuestaPendiente && <p className="mt-3 text-sm text-ink-soft">Aún no respondes ninguna encuesta.</p>
+            )}
           </div>
 
           <div className="mt-12 border-t border-line pt-6">
