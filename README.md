@@ -316,12 +316,27 @@ Sin Gmail configurado, en desarrollo los correos se imprimen en la terminal.
 - Al registrarse se revisa que el dominio pueda recibir correo y se envía un
   enlace de confirmación (`lib/verificacion.ts`). Quien no confirma puede usar
   la app, pero no activar recordatorios.
-- Cada paciente elige en "Mi cuenta" el modo: días personalizados o cada día
-  sin entrar a su rutina (`lib/recordatorios.ts`). Parten apagados.
-- Vercel Cron llama una vez al día a `/api/recordatorios/enviar` (`vercel.json`,
-  22:00 UTC). Solo se escribe a quien no completó la rutina de hoy: un mensaje
-  si no hizo ningún ejercicio y otro con los que le faltan si la dejó a medias.
-  No se recuerda a quien terminó todas sus lesiones.
+- Cada paciente elige en "Mi cuenta" el modo (en sus días de rutina o cada
+  día sin completarla) y la **hora**, de 07:00 a 22:00 de Chile; por defecto
+  19:00 (`lib/recordatorios.ts`). Parten apagados.
+- Vercel Cron llama **cada hora** a `/api/recordatorios/enviar` (`vercel.json`:
+  24 tareas diarias, una por hora UTC, porque el plan Hobby solo permite
+  tareas de una vez al día y las ejecuta en cualquier minuto de su hora). Se
+  envía desde la hora elegida en adelante si ese día aún no se envió, así
+  que una ejecución atrasada o saltada no pierde el recordatorio. Solo se
+  escribe a quien no completó la rutina de hoy: un mensaje si no hizo ningún
+  ejercicio y otro con los que le faltan si la dejó a medias. No se recuerda
+  a quien terminó todas sus lesiones.
+- **Registro de cada envío** (`lib/envios.ts`, colección
+  `envios_recordatorio`, se borra a los 180 días): fecha, hora, ronda,
+  intentos y resultado (enviado, fallido o agotado), sin el contenido del
+  correo. El paciente ve su último recordatorio en "Mi cuenta", lo recibe en
+  "Descargar mis datos" y se borra al eliminar la cuenta; el administrador ve
+  los totales de la semana.
+- **Reintentos:** si Gmail falla se reintenta dos veces en la misma ejecución
+  (tras 1 y 3 segundos); si sigue fallando, la ejecución de la hora siguiente
+  lo vuelve a intentar. Tras 3 ejecuciones fallidas en el día queda como
+  agotado hasta el día siguiente.
 - Los correos nunca mencionan la lesión ni otros datos clínicos.
 
 ## Despliegue

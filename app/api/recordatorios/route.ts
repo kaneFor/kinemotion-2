@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 import { getDb } from "@/lib/mongodb";
-import { MODOS_RECORDATORIO } from "@/lib/recordatorios";
+import { HORAS_RECORDATORIO, MODOS_RECORDATORIO } from "@/lib/recordatorios";
 import { obtenerUsuario } from "@/lib/sesion";
 
-const Preferencias = z.object({ modo: z.enum(MODOS_RECORDATORIO) });
+const Preferencias = z.object({
+  modo: z.enum(MODOS_RECORDATORIO),
+  hora: z
+    .number()
+    .int()
+    .refine((h) => HORAS_RECORDATORIO.includes(h))
+    .optional(),
+});
 
 export async function POST(req: NextRequest) {
   const usuario = await obtenerUsuario();
@@ -17,7 +24,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Preferencias no válidas." }, { status: 400 });
   }
-  const { modo } = parsed.data;
+  const { modo, hora } = parsed.data;
 
   if (modo !== "apagado" && !usuario.correoVerificado) {
     return NextResponse.json(
@@ -32,7 +39,7 @@ export async function POST(req: NextRequest) {
       .collection("usuarios")
       .updateOne(
         { _id: new ObjectId(usuario.id) },
-        { $set: { "recordatorios.modo": modo } }
+        { $set: { "recordatorios.modo": modo, ...(hora !== undefined && { "recordatorios.hora": hora }) } }
       );
     return NextResponse.json({ ok: true });
   } catch (err) {

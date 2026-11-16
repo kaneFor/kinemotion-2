@@ -4,6 +4,8 @@ import { obtenerAcceso } from "@/lib/acceso";
 import { enviarCorreo, escaparHtml } from "@/lib/correo";
 import { ejercicios } from "@/lib/data";
 import { leerEncuestas } from "@/lib/encuesta";
+import { enviosDe } from "@/lib/envios";
+import { formatoHora, horaDe } from "@/lib/recordatorios";
 import { leerDias } from "@/lib/historial";
 import { DIAS_SEMANA, diasDeRutina } from "@/lib/progreso";
 import { nombreLesion } from "@/lib/rutina";
@@ -16,6 +18,7 @@ import { nombreLesion } from "@/lib/rutina";
 const COLECCIONES_DEL_USUARIO = [
   "historial_progreso",
   "encuestas",
+  "envios_recordatorio",
   "recuperaciones_contrasena",
   "verificaciones_correo",
   "sesiones",
@@ -35,6 +38,7 @@ export async function exportarDatos(usuarioId: string) {
   const acceso = await obtenerAcceso(usuarioId);
   const dias = await leerDias(usuarioId, "0000-01-01");
   const encuestas = await leerEncuestas(usuarioId);
+  const envios = await enviosDe(usuarioId);
 
   const perfilIlegible =
     Boolean(perfil?.lesiones || perfil?.lesion) && acceso.lesionesPaciente.length === 0;
@@ -49,6 +53,7 @@ export async function exportarDatos(usuarioId: string) {
       creadaEn: usuario?.creadoEn,
       correoConfirmadoEn: usuario?.correoVerificadoEn ?? null,
       recordatorios: usuario?.recordatorios?.modo ?? "apagado",
+      horaRecordatorios: formatoHora(horaDe(usuario?.recordatorios)),
       diasDeRutina: diasDeRutina({ diasRutina: usuario?.diasRutina, recordatorios: usuario?.recordatorios }).map(
         (d) => DIAS_SEMANA.find((x) => x.valor === d)?.nombre
       ),
@@ -82,6 +87,7 @@ export async function exportarDatos(usuarioId: string) {
         dolorDespues: d.dolorDespues ?? null,
         suspendidoPorDolor: Boolean(d.suspendido),
       })),
+    recordatoriosEnviados: envios,
     encuestas: encuestas
       .filter((e) => !e.omitida)
       .map((e) => ({ semanaDel: e.semana, ...e, semana: undefined })),

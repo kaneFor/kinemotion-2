@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ModoRecordatorio } from "@/lib/recordatorios";
+import { formatoHora, HORAS_RECORDATORIO, type ModoRecordatorio } from "@/lib/recordatorios";
 
 const OPCIONES: { modo: ModoRecordatorio; titulo: string; detalle: string }[] = [
   { modo: "apagado", titulo: "Apagados", detalle: "No te enviaremos recordatorios." },
@@ -20,13 +20,16 @@ const OPCIONES: { modo: ModoRecordatorio; titulo: string; detalle: string }[] = 
 
 export default function FormRecordatorios({
   inicial,
+  horaInicial,
   correoVerificado,
 }: {
   inicial: ModoRecordatorio;
+  horaInicial: number;
   correoVerificado: boolean;
 }) {
   const router = useRouter();
   const [modo, setModo] = useState(inicial);
+  const [hora, setHora] = useState(horaInicial);
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -40,7 +43,7 @@ export default function FormRecordatorios({
       const res = await fetch("/api/recordatorios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modo }),
+        body: JSON.stringify({ modo, hora }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -75,11 +78,27 @@ export default function FormRecordatorios({
           </label>
         ))}
 
+        <label className="flex flex-wrap items-center gap-3 text-sm text-ink pt-2">
+          Hora del recordatorio
+          <select
+            value={hora}
+            onChange={(e) => setHora(Number(e.target.value))}
+            disabled={modo === "apagado"}
+            className="border border-line bg-paper-dim/40 rounded-sm px-3 py-2 text-ink outline-none focus:border-teal disabled:opacity-60"
+          >
+            {HORAS_RECORDATORIO.map((h) => (
+              <option key={h} value={h}>
+                {formatoHora(h)}
+              </option>
+            ))}
+          </select>
+        </label>
       </fieldset>
 
       <p className="text-xs text-ink-soft">
-        Los correos salen una vez al día, por la tarde (hora de Chile). Puedes
-        darte de baja desde cualquiera de ellos.
+        Te escribimos una vez al día, dentro de la hora que elijas (hora de
+        Chile). Si el envío falla, lo reintentamos más tarde ese mismo día.
+        Puedes darte de baja desde cualquier correo.
       </p>
       {errorMsg && <p className="text-sm text-danger">{errorMsg}</p>}
       {mensaje && <p className="text-sm text-teal-deep">{mensaje}</p>}

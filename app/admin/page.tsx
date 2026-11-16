@@ -3,6 +3,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { AvisoDemo, Pestanas } from "@/components/AdminUI";
 import GraficoCumplimiento from "@/components/GraficoCumplimiento";
+import { resumenEnvios } from "@/lib/envios";
 import { calcularIndicadores, MINIMO_GRUPO, SEMANAS, type Promedio } from "@/lib/indicadores";
 import { obtenerAdmin } from "@/lib/sesion";
 
@@ -12,7 +13,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   if (!(await obtenerAdmin())) notFound();
 
   const incluirDemo = (await searchParams).demo !== "0";
-  const ind = await calcularIndicadores(incluirDemo);
+  const [ind, envios] = await Promise.all([calcularIndicadores(incluirDemo), resumenEnvios(7)]);
   const sinDatos = `Menos de ${MINIMO_GRUPO} pacientes con sesiones`;
   const { actual } = ind;
 
@@ -100,6 +101,19 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                 .
               </p>
             )}
+          </div>
+
+          <div className="mt-12 border-t border-line pt-6">
+            <h2 className="font-display text-base text-ink">Recordatorios por correo</h2>
+            <p className="mt-1 text-xs text-ink-soft">
+              Últimos 7 días. Cada envío queda registrado; si falla se reintenta, y tras 3 intentos
+              fallidos en el día queda como agotado.
+            </p>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <Dato valor={String(envios.enviados)} texto="enviados" />
+              <Dato valor={String(envios.fallidos)} texto="fallidos que se reintentaron" />
+              <Dato valor={String(envios.agotados)} texto="agotados (no se pudieron enviar ese día)" />
+            </div>
           </div>
 
           <div className="mt-12 border-t border-line pt-6">

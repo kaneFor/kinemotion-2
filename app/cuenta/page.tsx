@@ -14,7 +14,8 @@ import GestionLesiones from "@/components/GestionLesiones";
 import { obtenerAcceso } from "@/lib/acceso";
 import { getDb } from "@/lib/mongodb";
 import { diasDeRutina } from "@/lib/progreso";
-import type { Recordatorios } from "@/lib/recordatorios";
+import { ultimoEnvio } from "@/lib/envios";
+import { formatoHora, horaDe, type Recordatorios } from "@/lib/recordatorios";
 import { nombreLesion } from "@/lib/rutina";
 import { obtenerUsuario } from "@/lib/sesion";
 
@@ -31,6 +32,7 @@ export default async function Cuenta() {
     .findOne({ _id: new ObjectId(usuario.id) }, { projection: { recordatorios: 1, diasRutina: 1 } });
   const recordatorios = preferencias?.recordatorios as Recordatorios | undefined;
   const dias = diasDeRutina({ diasRutina: preferencias?.diasRutina, recordatorios });
+  const envio = await ultimoEnvio(usuario.id).catch(() => null);
 
   return (
     <>
@@ -123,8 +125,27 @@ export default async function Cuenta() {
             )}
             <FormRecordatorios
               inicial={recordatorios?.modo ?? "apagado"}
+              horaInicial={horaDe(recordatorios)}
               correoVerificado={usuario.correoVerificado}
             />
+            {envio && (
+              <p className="mt-4 text-xs text-ink-soft">
+                Último recordatorio:{" "}
+                {new Date(`${envio.fecha}T12:00:00Z`).toLocaleDateString("es-CL", {
+                  day: "numeric",
+                  month: "long",
+                  timeZone: "UTC",
+                })}
+                , cerca de las {formatoHora(envio.hora)} ·{" "}
+                <span className={envio.estado === "enviado" ? "text-teal-deep" : "text-danger"}>
+                  {envio.estado === "enviado"
+                    ? "enviado"
+                    : envio.estado === "fallido"
+                    ? "no se pudo enviar; lo reintentaremos"
+                    : "no se pudo enviar ese día"}
+                </span>
+              </p>
+            )}
           </div>
           <div className="mt-10 border-t border-line pt-6">
             <h2 className="font-display text-base text-ink">Tus datos</h2>
