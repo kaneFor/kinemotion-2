@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { obtenerAcceso } from "@/lib/acceso";
-import { enviarCorreo, escaparHtml, urlApp } from "@/lib/correo";
+import { botonCorreo, enviarCorreo, escaparHtml, primerNombre, urlApp } from "@/lib/correo";
 import { leerEnv } from "@/lib/env";
 import { leerDia } from "@/lib/historial";
 import { getDb } from "@/lib/mongodb";
@@ -185,30 +185,33 @@ function enviarRecordatorio(
   const baja = `${base}/baja?token=${token}`;
 
   const ejerciciosFaltan = avance.faltan === 1 ? "1 ejercicio" : `${avance.faltan} ejercicios`;
+  const falta = avance.faltan === 1 ? "falta" : "faltan";
   const { asunto, cuerpo, boton } =
     avance.hechos === 0
       ? {
-          asunto: "No esperes a que la molestia empeore",
+          asunto: "Un momento para ti 💙",
           cuerpo:
-            "No esperes a que la molestia empeore para empezar. Tu rutina de hoy toma unos minutos y cada día cuenta para tu recuperación.",
+            "Queremos recordarte que tu bienestar es importante. Dedica unos minutos al día a cuidarte y no esperes a que las molestias aumenten.",
           boton: "Empezar mi rutina",
         }
       : {
-          asunto: `Te ${avance.faltan === 1 ? "falta" : "faltan"} ${ejerciciosFaltan} de tu rutina de hoy`,
-          cuerpo: `Ya empezaste: te ${avance.faltan === 1 ? "falta" : "faltan"} ${ejerciciosFaltan} para completar tu rutina de hoy.`,
+          asunto: `Un momento para ti 💙 Te ${falta} ${ejerciciosFaltan}`,
+          cuerpo: `Ya empezaste: te ${falta} ${ejerciciosFaltan} para completar tu rutina de hoy. Dedica unos minutos más a cuidarte.`,
           boton: "Continuar mi rutina",
         };
+  const cierre = "¡Cada pequeño paso cuenta! Estamos aquí para acompañarte. 🌿";
+  const saludo = `Hola, ${primerNombre(nombre)}.`;
 
   return enviarCorreo({
     para: correo,
     asunto,
     texto:
-      `Hola ${nombre}:\n\n${cuerpo}\n${rutina}\n\n` +
+      `${saludo} ${cuerpo}\n\n${boton}:\n${rutina}\n\n${cierre}\n\n` +
       `Si no quieres recibir más recordatorios, date de baja aquí:\n${baja}`,
     html:
-      `<p>Hola ${escaparHtml(nombre)}:</p>` +
-      `<p>${cuerpo}</p>` +
-      `<p><a href="${rutina}">${boton}</a></p>` +
+      `<p>${escaparHtml(saludo)} ${cuerpo}</p>` +
+      botonCorreo(rutina, boton) +
+      `<p>${cierre}</p>` +
       `<p style="font-size:12px;color:#666"><a href="${baja}">Dejar de recibir recordatorios</a></p>`,
     baja: `${base}/api/recordatorios/baja?token=${token}`,
   });

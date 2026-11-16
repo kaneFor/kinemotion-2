@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
-import { enviarCorreo, escaparHtml, urlApp } from "@/lib/correo";
+import { botonCorreo, enviarCorreo, escaparHtml, primerNombre, urlApp } from "@/lib/correo";
 
 /**
  * Confirmación del correo. Como en las sesiones, en la base (colección
@@ -31,18 +31,30 @@ export async function enviarConfirmacion(
   });
 
   const enlace = `${urlApp()}/verificar?token=${token}`;
+  const nombre = primerNombre(usuario.nombre);
+  const bienvenida = "¡Estamos felices de acompañarte en este camino hacia tu bienestar! 💙";
+  const activar =
+    "Para activar tus recordatorios de KineMotion y comenzar a recibir recordatorios que te ayudarán a mantener tu rutina, solo necesitas confirmar tu correo electrónico.";
+  const cierre =
+    "¡Gracias por confiar en KineMotion! Cada pequeño paso cuenta y queremos acompañarte en cada uno de ellos. 🌿";
   await enviarCorreo({
     para: usuario.correo,
     asunto: "Confirma tu correo en KineMotion",
     texto:
-      `Hola ${usuario.nombre}:\n\n` +
-      `Confirma tu correo para activar los recordatorios de KineMotion:\n${enlace}\n\n` +
-      "El enlace dura 24 horas. Si no creaste esta cuenta, ignora este mensaje.",
+      `¡Hola, ${nombre}!\n\n${bienvenida}\n\n${activar}\n\n` +
+      `Confirmar mi correo:\n${enlace}\n\n` +
+      "Este enlace estará disponible durante 24 horas.\n\n" +
+      `${cierre}\n\n¡Tu bienestar comienza hoy!\n\n` +
+      "Si no creaste esta cuenta, ignora este mensaje.",
     html:
-      `<p>Hola ${escaparHtml(usuario.nombre)}:</p>` +
-      "<p>Confirma tu correo para activar los recordatorios de KineMotion.</p>" +
-      `<p><a href="${enlace}">Confirmar mi correo</a></p>` +
-      "<p>El enlace dura 24 horas. Si no creaste esta cuenta, ignora este mensaje.</p>",
+      `<p>¡Hola, ${escaparHtml(nombre)}!</p>` +
+      `<p>${bienvenida}</p>` +
+      `<p>${activar}</p>` +
+      botonCorreo(enlace, "Confirmar mi correo") +
+      "<p>Este enlace estará disponible durante 24 horas.</p>" +
+      `<p>${cierre}</p>` +
+      "<p><strong>¡Tu bienestar comienza hoy!</strong></p>" +
+      '<p style="font-size:12px;color:#666">Si no creaste esta cuenta, ignora este mensaje.</p>',
   });
 }
 

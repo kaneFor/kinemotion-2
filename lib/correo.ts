@@ -26,6 +26,12 @@ export const escaparHtml = (texto: string) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
+/** Botón para el HTML de los correos (estilos en línea: los clientes de correo ignoran las hojas de estilo). */
+export const botonCorreo = (href: string, texto: string) =>
+  `<p style="margin:24px 0"><a href="${href}" style="background:#1f5f52;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:4px;font-weight:600;display:inline-block">${escaparHtml(texto)}</a></p>`;
+
+export const primerNombre = (nombre: string) => nombre.trim().split(/\s+/)[0] || nombre;
+
 export type Mensaje = {
   para: string;
   asunto: string;
