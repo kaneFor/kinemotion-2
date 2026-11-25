@@ -22,25 +22,22 @@ export function Pestanas({ actual, demo }: { actual: "indicadores" | "cuentas"; 
 export function AvisoDemo({ demo, incluido, ruta }: { demo: number; incluido: boolean; ruta: string }) {
   if (demo === 0) return null;
   return (
-    <div className="mt-6 border border-line bg-paper-dim/60 rounded-sm px-4 py-3 text-sm">
+    <p className="mt-4 text-xs text-ink-soft">
       {incluido ? (
         <>
-          <strong className="text-ink">Incluye {demo} cuentas de demostración.</strong>{" "}
-          <span className="text-ink-soft">
-            Son datos inventados para mostrar el panel; no son resultados de la validación.
-          </span>{" "}
-          <Link href={`${ruta}?demo=0`} className="text-teal-deep underline whitespace-nowrap">
-            Ver solo cuentas reales
+          Incluye {demo} cuentas de demostración ·{" "}
+          <Link href={`${ruta}?demo=0`} className="underline whitespace-nowrap">
+            ver solo cuentas reales
           </Link>
         </>
       ) : (
         <>
-          <span className="text-ink-soft">Mostrando solo cuentas reales.</span>{" "}
-          <Link href={ruta} className="text-teal-deep underline">
-            Incluir las {demo} cuentas de demostración
+          Solo cuentas reales ·{" "}
+          <Link href={ruta} className="underline">
+            incluir las {demo} de demostración
           </Link>
         </>
       )}
-    </div>
+    </p>
   );
 }

@@ -2,7 +2,7 @@
 // Son inventadas: no son resultados de la validación y no deben presentarse
 // como tales.
 // Uso:
-//   npm run datos-demo            crea 30 pacientes con ~8 semanas de historial
+//   npm run datos-demo            crea 12 pacientes con ~2 semanas de uso intermitente
 //   npm run datos-demo -- --borrar  elimina todas las cuentas de demostración
 //
 // Cada cuenta lleva `demo: true`: el panel las marca, el script de
@@ -60,21 +60,19 @@ async function crear() {
   const elegir = (lista) => lista[Math.floor(azar() * lista.length)];
   const acotar = (n, min, max) => Math.min(max, Math.max(min, n));
 
+  // 12 pacientes, como la muestra de validación, con unas dos semanas de uso.
   const NOMBRES = [
-    "Valentina", "Matías", "Catalina", "Benjamín", "Antonia", "Vicente", "Javiera", "Martín",
-    "Fernanda", "Tomás", "Isidora", "Joaquín", "Constanza", "Diego", "Florencia", "Sebastián",
-    "Camila", "Agustín", "Josefa", "Cristóbal", "Martina", "Lucas", "Trinidad", "Nicolás",
-    "Amanda", "Felipe", "Emilia", "Ignacio", "Sofía", "Maximiliano",
+    "Valentina R.", "Matías S.", "Catalina M.", "Benjamín A.", "Antonia P.", "Vicente L.",
+    "Javiera C.", "Tomás F.", "Fernanda G.", "Diego N.", "Isidora V.", "Joaquín H.",
   ];
-  // Cada grupo con al menos 5 pacientes, para que el panel lo muestre.
+  // Dos grupos llegan a 5 pacientes; los demás se ocultan en el panel por privacidad.
   const LESIONES = [
-    ...Array(8).fill("esguince-tobillo"),
-    ...Array(6).fill("fascitis-plantar"),
-    ...Array(6).fill("tendinitis-muneca"),
-    ...Array(5).fill("epicondilitis"),
+    ...Array(5).fill("esguince-tobillo"),
     ...Array(5).fill("cervicalgia"),
+    "fascitis-plantar",
+    "epicondilitis",
   ];
-  const DIAS = [[0, 1, 2, 3, 4, 5, 6], [1, 3, 5], [1, 2, 3, 4, 5], [1, 2, 4, 5], [2, 4, 6]];
+  const DIAS = [[1, 3, 5], [1, 2, 3, 4, 5], [1, 2, 4, 5], [2, 4, 6], [1, 3, 5, 6]];
   const CON_CAMARA = new Set(ejercicios.filter((e) => e.angleTarget).map((e) => e.id));
 
   const ahora = new Date();
@@ -89,18 +87,17 @@ async function crear() {
   const passwordHash = await bcrypt.hash(crypto.randomBytes(24).toString("hex"), 10);
 
   for (let n = 0; n < NOMBRES.length; n++) {
-    const semanas = entre(3, 9);
-    const inicio = sumarDias(hoy, -semanas * 7 + entre(0, 6));
+    const inicio = sumarDias(hoy, -entre(13, 16));
     const creadoEn = new Date(`${inicio}T14:00:00Z`);
     const lesion = LESIONES[n];
-    // Algunos tienen una segunda lesión.
-    const otra = azar() < 0.15 ? elegir(LESIONES.filter((l) => l !== lesion)) : null;
+    const otra = null;
     const diasRutina = elegir(DIAS);
-    const constancia = 0.35 + azar() * 0.6; // qué tan seguido completa su rutina
-    const rutina = ejercicios.filter((e) => e.lesionSlug === lesion || e.lesionSlug === otra).map((e) => e.id);
-
+    const constancia = 0.5 + azar() * 0.35; // qué tan seguido completa su rutina
+    // Uno de cada cuatro deja de usarla después de la primera semana.
+    const ultimoDia = azar() < 0.25 ? sumarDias(inicio, entre(7, 10)) : hoy;
+    const rutina = ejercicios.filter((e) => e.lesionSlug === lesion).map((e) => e.id);
     const { insertedId: usuarioId } = await usuarios.insertOne({
-      nombre: `${NOMBRES[n]} (demo)`,
+      nombre: NOMBRES[n],
       correo: `demo${String(n + 1).padStart(2, "0")}@demo.kinemotion.invalid`,
       passwordHash,
       demo: true,
@@ -119,23 +116,25 @@ async function crear() {
 
     const historial = [];
     let dolor = entre(3, 6);
-    for (let fecha = inicio, i = 0; fecha <= hoy; fecha = sumarDias(fecha, 1), i++) {
+    let ayerHizo = true;
+    for (let fecha = inicio, i = 0; fecha <= ultimoDia; fecha = sumarDias(fecha, 1), i++) {
       const programado = diasRutina.includes(diaSemana(fecha));
-      // La constancia baja un poco con las semanas, como suele pasar.
-      const p = constancia - i * 0.003;
+      // La constancia baja con los días, y cuesta más retomar tras saltarse uno.
+      const p = constancia - i * 0.012 - (ayerHizo ? 0 : 0.1);
       const azarDia = azar();
-      if (!programado && azarDia > 0.08) continue;
+      if (!programado && azarDia > 0.05) continue;
       if (fecha === hoy && azarDia > 0.5) continue;
 
       const en = `${fecha}T${String(entre(12, 23)).padStart(2, "0")}:00:00.000Z`;
-      if (azar() < 0.04) {
+      if (azar() < 0.05) {
         historial.push({ fecha, dia: { hechos: [], saltados: [], series: [], dolorAntes: acotar(dolor + 3, 0, 10), suspendido: true, totalRutina: rutina.length } });
         continue;
       }
       let hechos;
       if (azarDia < p) hechos = rutina;
-      else if (azarDia < p + 0.15) hechos = rutina.slice(0, entre(1, rutina.length - 1));
-      else continue;
+      else if (azarDia < p + 0.2) hechos = rutina.slice(0, entre(1, rutina.length - 1));
+      else { ayerHizo = false; continue; }
+      ayerHizo = true;
 
       const series = hechos
         .filter((id) => CON_CAMARA.has(id))
@@ -165,14 +164,18 @@ async function crear() {
 
     const encuestas = [];
     const lunesInicio = sumarDias(inicio, -((diaSemana(inicio) + 6) % 7));
-    for (let semana = lunesInicio; semana <= hoy; semana = sumarDias(semana, 7)) {
+    // Solo responde la encuesta las semanas en que usó la plataforma.
+    const lunesDeFecha = (f) => sumarDias(f, -((diaSemana(f) + 6) % 7));
+    const semanasActivas = new Set(historial.filter((h) => h.dia.hechos.length).map((h) => lunesDeFecha(h.fecha)));
+    for (let semana = lunesInicio; semana <= ultimoDia; semana = sumarDias(semana, 7)) {
+      if (!semanasActivas.has(semana)) continue;
       const r = azar();
-      if (r < 0.65) {
+      if (r < 0.7) {
         encuestas.push({
           usuarioId,
           semana,
           datos: cifrar({
-            utilidad: acotar(Math.round(3 + constancia * 2 + (azar() - 0.5)), 1, 5),
+            utilidad: acotar(Math.round(3 + constancia * 2 + (azar() - 0.4)), 2, 5),
             claridad: entre(3, 5),
             dificultad: entre(2, 4),
           }),
